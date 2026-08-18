@@ -396,6 +396,8 @@ checkpoints/TANDEM_HRL/model_1023.pt          历史 TANDEM HRL checkpoint
 logs/rsl_rl/maniploco/                        训练运行和 checkpoint
 legacy_zyb_check/                             稳定性脚本、reference 模型、CSV、日志
 legacy_zyb_check/debug_runs_20260818.md       追加式完整调试记录
+reference_server_data/                        服务器数据盘的相关历史结果和参考资产
+SERVER_SNAPSHOT_SCOPE.md                      服务器内容打包范围与归档恢复说明
 ```
 
 GitHub 当前发布仓库：
@@ -405,3 +407,7 @@ https://github.com/QQQIN12/tandem_hrl_current_progress
 ```
 
 仓库不包含服务器登录密码、GitHub token 或桌面的 `1.txt`。复现者需要自行准备 Isaac Sim/Isaac Lab 安装，并按本文件中的外部环境路径或等价路径修改启动脚本。
+
+服务器数据盘中与本项目相关的历史结果、参考资产和原始归档分片也已放入
+`reference_server_data/`；详细边界和归档恢复命令见
+`SERVER_SNAPSHOT_SCOPE.md`。Isaac Sim/Isaac Lab 安装本体不在 GitHub 项目内。

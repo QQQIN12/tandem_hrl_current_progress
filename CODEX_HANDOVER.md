@@ -262,4 +262,8 @@ https://github.com/QQQIN12/tandem_hrl_current_progress
 
 README 和本交接文档应同时放在服务器项目根目录和本地桌面。上传内容应包括当前项目源代码、当前训练/评估证据、legacy reference 与相关 USD；不包括外部 Isaac Lab 安装、系统缓存、登录凭据和桌面凭据文件。
 
+服务器数据盘的其余相关历史结果已经放在 `reference_server_data/`；原始
+`tandem_620d798_gitarchive.tar` 被切成多个小于 GitHub 普通文件限制的分片，
+恢复方法见 `SERVER_SNAPSHOT_SCOPE.md`。
+
 后续 Codex 接手时，第一步应检查远程仓库的 `git status`、当前分支和 README 是否已推送，再检查本交接文档中的模型路径是否存在。不要从一个“看起来最新”的 `model_*.pt` 直接开始训练，先按第 7 节重新验证。

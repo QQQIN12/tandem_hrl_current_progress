@@ -217,6 +217,15 @@ Termination/bad_contact
 
 ## 8. 复现命令模板
 
+GitHub 主分支包含 Git LFS 管理的 USD 和 checkpoint。新服务器先执行：
+
+```bash
+git lfs install
+git clone https://github.com/QQQIN12/tandem_hrl_current_progress.git
+cd tandem_hrl_current_progress
+git lfs pull
+```
+
 ```bash
 cd /root/gpufree-data/tandem_hrl_620d798
 export PYTHONPATH="$PWD/source/quadruped_arm:$PYTHONPATH"

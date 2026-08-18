@@ -250,6 +250,22 @@ Wheel5 + 车体速度反馈的 300 步测试最高实测轮速达到约 `6.052` 
 
 ## 5. 复现方法
 
+### 5.0 从 GitHub 获取代码
+
+当前仓库使用 Git LFS 管理 USD 和 checkpoint。第一次获取时需要安装并初始化 Git LFS：
+
+```bash
+git lfs install
+git clone https://github.com/QQQIN12/tandem_hrl_current_progress.git
+cd tandem_hrl_current_progress
+```
+
+如果只需要先查看 Python 代码，可以先用浅克隆；要完整复现当前资产和 checkpoint，必须让 Git LFS 完成下载：
+
+```bash
+git lfs pull
+```
+
 ### 5.1 环境检查
 
 以下命令假设已经进入服务器工作站，并且 Isaac Lab 安装位置与本次服务器一致：

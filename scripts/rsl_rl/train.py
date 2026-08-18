@@ -1,0 +1,1408 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+"""Script to train RL agent with RSL-RL."""
+
+"""Launch Isaac Sim Simulator first."""
+
+import argparse
+import sys
+
+from isaaclab.app import AppLauncher
+
+# local imports
+import cli_args  # isort: skip
+
+# add argparse arguments
+parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
+parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
+parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
+parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
+parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
+parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+parser.add_argument(
+    "--agent", type=str, default="rsl_rl_cfg_entry_point", help="Name of the RL agent configuration entry point."
+)
+parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
+parser.add_argument(
+    "--save_interval",
+    type=int,
+    default=None,
+    help="Checkpoint interval in learning iterations.",
+)
+parser.add_argument(
+    "--partial_init_checkpoint",
+    type=str,
+    default=None,
+    help="Initialize shape-compatible policy parameters and overlapping action heads from a checkpoint.",
+)
+parser.add_argument(
+    "--tactic_init_checkpoint",
+    type=str,
+    default=None,
+    help="Initialize only the original ZYB-v0 physical policy for TACTIC-HRL.",
+)
+parser.add_argument(
+    "--stability_teacher_only",
+    action="store_true",
+    default=False,
+    help=(
+        "Route the 12 leg and 4 wheel outputs through the migrated ZYB-v0 "
+        "teacher exactly; keep hierarchy/gripper learning separate."
+    ),
+)
+parser.add_argument(
+    "--multi_teacher",
+    action="store_true",
+    default=False,
+    help=(
+        "Publish a gated ZYB/conservative/neutral teacher ensemble and add "
+        "its imitation target to the lower-body PPO reward."
+    ),
+)
+parser.add_argument(
+    "--teacher_checkpoint",
+    type=str,
+    default=None,
+    help="Archived 876->16 ZYB teacher checkpoint used by --multi_teacher.",
+)
+parser.add_argument(
+    "--teacher_blend_start",
+    type=float,
+    default=0.85,
+    help="Initial teacher action blend for --multi_teacher.",
+)
+parser.add_argument(
+    "--teacher_blend_end",
+    type=float,
+    default=0.20,
+    help="Final teacher action blend for --multi_teacher.",
+)
+parser.add_argument(
+    "--teacher_blend_steps",
+    type=int,
+    default=100000,
+    help="Number of environment steps over which the teacher shield decays.",
+)
+parser.add_argument(
+    "--flat_skill_checkpoint",
+    type=str,
+    default=None,
+    help="Initialize the structured actor's physical skill branch from a 16-action checkpoint.",
+)
+parser.add_argument(
+    "--reset_physical_conditioner",
+    action="store_true",
+    default=False,
+    help="Zero FiLM and option-residual outputs after loading a hierarchy checkpoint.",
+)
+parser.add_argument(
+    "--reset_tactic_successor",
+    action="store_true",
+    default=False,
+    help=(
+        "Keep transferred task/skill representations while restarting the "
+        "TACTIC embodiment successor model on the current action interface."
+    ),
+)
+parser.add_argument(
+    "--training_stage",
+    choices=(
+        "stability",
+        "upper",
+        "decomposition",
+        "motion_selector",
+        "interaction_selector",
+        "motion_skill",
+        "payload_motion",
+        "recovery",
+        "survival",
+        "adapter",
+        "support_reference",
+        "support_gate",
+        "support_gate_adapter",
+        "support",
+        "wheel_skill",
+        "payload_wheel",
+        "wheel_adapter",
+        "transient_adapter",
+        "mobility_skill",
+        "locomotion_core",
+        "locomotion",
+        "tail",
+        "joint",
+        "robust",
+    ),
+    default="joint",
+    help="Select which parts of the structured hierarchy are trainable.",
+)
+parser.add_argument(
+    "--resume_model_only",
+    action="store_true",
+    default=False,
+    help="Resume network and iteration state without restoring the previous optimizer.",
+)
+parser.add_argument(
+    "--resume_checkpoint",
+    type=str,
+    default=None,
+    help="Continue from an exact checkpoint path while using the current stage configuration.",
+)
+parser.add_argument(
+    "--resume_iteration_override",
+    type=int,
+    default=None,
+    help="Set the first iteration label after loading a stage-transition checkpoint.",
+)
+parser.add_argument(
+    "--freeze_transferred_actor",
+    action="store_true",
+    default=False,
+    help="Train only newly added action rows while keeping the transferred actor and physical actions fixed.",
+)
+parser.add_argument(
+    "--physical_action_dim",
+    type=int,
+    default=16,
+    help="Number of leading action dimensions belonging to the transferred physical policy.",
+)
+parser.add_argument(
+    "--action_std_override",
+    type=float,
+    default=None,
+    help="Set the policy exploration standard deviation after checkpoint loading.",
+)
+parser.add_argument(
+    "--wheel_action_std_override",
+    type=float,
+    default=None,
+    help="Set exploration only for the four wheel actions at indices 12:16.",
+)
+parser.add_argument(
+    "--leg_action_std_override",
+    type=float,
+    default=None,
+    help="Set exploration only for the twelve leg actions at indices 0:12.",
+)
+parser.add_argument(
+    "--policy_learning_rate_override",
+    type=float,
+    default=None,
+    help="Override the PPO learning rate for this run.",
+)
+parser.add_argument(
+    "--auxiliary_learning_rate_override",
+    type=float,
+    default=None,
+    help="Override the TACTIC auxiliary-model learning rate.",
+)
+parser.add_argument(
+    "--successor_learning_rate_override",
+    type=float,
+    default=None,
+    help="Override the TACTIC successor-adapter learning rate.",
+)
+parser.add_argument(
+    "--physical_adapter_lr_scale_override",
+    type=float,
+    default=None,
+    help="Scale PPO updates for the learned physical skill adapters.",
+)
+parser.add_argument(
+    "--interaction_phase_prior_gain_override",
+    type=float,
+    default=None,
+    help="Override the learned interaction-phase prior gain.",
+)
+parser.add_argument(
+    "--release_target_radius_override",
+    type=float,
+    default=None,
+    help="Override the release radius in the actor and PPO phase targets.",
+)
+parser.add_argument(
+    "--composition_probe_probability_override",
+    type=float,
+    default=None,
+    help="Override the probability assigned to curriculum composition probes.",
+)
+parser.add_argument(
+    "--composition_probe_levels_ahead_override",
+    type=int,
+    default=None,
+    help="Override how many curriculum levels a composition probe may advance.",
+)
+parser.add_argument(
+    "--pure_hrl_objectives",
+    action="store_true",
+    default=False,
+    help=(
+        "Train task/skill decomposition without CLF/CBF-inspired auxiliary "
+        "losses or margin-driven recovery biases."
+    ),
+)
+parser.add_argument(
+    "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
+)
+parser.add_argument("--export_io_descriptors", action="store_true", default=False, help="Export IO descriptors.")
+parser.add_argument(
+    "--ray-proc-id", "-rid", type=int, default=None, help="Automatically configured by Ray integration, otherwise None."
+)
+# append RSL-RL cli arguments
+cli_args.add_rsl_rl_args(parser)
+# append AppLauncher cli args
+AppLauncher.add_app_launcher_args(parser)
+args_cli, hydra_args = parser.parse_known_args()
+
+# always enable cameras to record video
+if args_cli.video:
+    args_cli.enable_cameras = True
+
+# clear out sys.argv for Hydra
+sys.argv = [sys.argv[0]] + hydra_args
+
+# launch omniverse app
+app_launcher = AppLauncher(args_cli)
+simulation_app = app_launcher.app
+
+"""Check for minimum supported RSL-RL version."""
+
+import importlib.metadata as metadata
+import platform
+
+from packaging import version
+
+# check minimum supported rsl-rl version
+RSL_RL_VERSION = "3.0.1"
+installed_version = metadata.version("rsl-rl-lib")
+if version.parse(installed_version) < version.parse(RSL_RL_VERSION):
+    if platform.system() == "Windows":
+        cmd = [r".\isaaclab.bat", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
+    else:
+        cmd = ["./isaaclab.sh", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
+    print(
+        f"Please install the correct version of RSL-RL.\nExisting version is: '{installed_version}'"
+        f" and required version is: '{RSL_RL_VERSION}'.\nTo install the correct version, run:"
+        f"\n\n\t{' '.join(cmd)}\n"
+    )
+    exit(1)
+
+"""Rest everything follows."""
+
+import logging
+import os
+import time
+from datetime import datetime
+
+import gymnasium as gym
+import torch
+from rsl_rl.runners import DistillationRunner, OnPolicyRunner
+
+from isaaclab.envs import (
+    DirectMARLEnv,
+    DirectMARLEnvCfg,
+    DirectRLEnvCfg,
+    ManagerBasedRLEnvCfg,
+    multi_agent_to_single_agent,
+)
+from isaaclab.utils.dict import print_dict
+from isaaclab.utils.io import dump_yaml
+
+from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper
+
+import isaaclab_tasks  # noqa: F401
+from isaaclab_tasks.utils import get_checkpoint_path
+from isaaclab_tasks.utils.hydra import hydra_task_config
+
+# import logger
+logger = logging.getLogger(__name__)
+
+import quadruped_arm.tasks  # noqa: F401
+try:
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_hierarchical_actor_critic import (  # noqa: E402
+        LRHierarchicalActorCritic,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_hierarchical_ppo import (  # noqa: E402
+        LRHierarchicalPPO,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_deep_hierarchical_actor_critic import (  # noqa: E402
+        LRDeepHierarchicalActorCritic,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_deep_hierarchical_ppo import (  # noqa: E402
+        LRDeepHierarchicalPPO,
+    )
+except ModuleNotFoundError:
+    LRHierarchicalActorCritic = None
+    LRHierarchicalPPO = None
+    LRDeepHierarchicalActorCritic = None
+    LRDeepHierarchicalPPO = None
+from quadruped_arm.tasks.manager_based.TACTIC_HRL.agents import (  # noqa: E402
+    TACTICActorCritic,
+    TACTICPPO,
+)
+from quadruped_arm.tasks.manager_based.TACTIC_HRL.agents import (  # noqa: E402
+    tactic_ppo as tactic_ppo_module,
+)
+from quadruped_arm.tasks.manager_based.TACTIC_HRL.agents.tactic_checkpoint import (  # noqa: E402
+    load_zyb_baseline_physical,
+)
+
+import rsl_rl.runners.on_policy_runner as rsl_on_policy_runner  # noqa: E402
+
+# OnPolicyRunner resolves custom classes in its own module namespace.
+for class_name, class_type in (
+    ("LRHierarchicalActorCritic", LRHierarchicalActorCritic),
+    ("LRHierarchicalPPO", LRHierarchicalPPO),
+    ("LRDeepHierarchicalActorCritic", LRDeepHierarchicalActorCritic),
+    ("LRDeepHierarchicalPPO", LRDeepHierarchicalPPO),
+    ("TACTICActorCritic", TACTICActorCritic),
+    ("TACTICPPO", TACTICPPO),
+):
+    if class_type is not None:
+        setattr(rsl_on_policy_runner, class_name, class_type)
+
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+torch.backends.cudnn.deterministic = False
+torch.backends.cudnn.benchmark = False
+
+
+def load_partial_policy(runner: OnPolicyRunner, checkpoint_path: str) -> None:
+    """Transfer shared representations while allowing the action space to grow."""
+
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    source = payload.get("model_state_dict", payload)
+    target = runner.alg.policy.state_dict()
+    copied_exact = []
+    copied_overlap = []
+
+    for key, target_value in target.items():
+        source_value = source.get(key)
+        if not isinstance(source_value, torch.Tensor):
+            continue
+        source_value = source_value.to(dtype=target_value.dtype)
+        if source_value.shape == target_value.shape:
+            target[key] = source_value
+            copied_exact.append(key)
+            continue
+        if source_value.ndim != target_value.ndim:
+            continue
+        overlap = tuple(min(a, b) for a, b in zip(source_value.shape, target_value.shape))
+        if not overlap or any(width <= 0 for width in overlap):
+            continue
+        slices = tuple(slice(0, width) for width in overlap)
+        merged = target_value.clone()
+        merged[slices] = source_value[slices]
+        if key in ("std", "log_std") and target_value.shape[0] > source_value.shape[0]:
+            if key == "std":
+                merged[source_value.shape[0] :] = 0.35
+            else:
+                merged[source_value.shape[0] :] = torch.log(torch.tensor(0.35, dtype=merged.dtype))
+        target[key] = merged
+        copied_overlap.append(f"{key}:{source_value.shape}->{target_value.shape}")
+
+    runner.alg.policy.load_state_dict(target, strict=True)
+    print(f"[INFO] Partial policy initialization from: {checkpoint_path}")
+    print(f"[INFO] Exact tensors copied: {len(copied_exact)}")
+    print(f"[INFO] Overlap tensors copied: {copied_overlap}")
+
+
+def freeze_transferred_actor(runner: OnPolicyRunner, physical_action_dim: int) -> None:
+    """Protect the transferred skill policy while the new upper option head learns."""
+
+    policy = runner.alg.policy
+    linear_layers = [module for module in policy.actor.modules() if isinstance(module, torch.nn.Linear)]
+    if not linear_layers:
+        raise RuntimeError("Actor has no linear output layer to protect.")
+    output_layer = linear_layers[-1]
+    for layer in linear_layers[:-1]:
+        for parameter in layer.parameters():
+            parameter.requires_grad_(False)
+
+    protected = int(max(0, min(physical_action_dim, output_layer.out_features)))
+    output_layer.weight.register_hook(
+        lambda grad: torch.cat([torch.zeros_like(grad[:protected]), grad[protected:]], dim=0)
+    )
+    if output_layer.bias is not None:
+        output_layer.bias.register_hook(
+            lambda grad: torch.cat([torch.zeros_like(grad[:protected]), grad[protected:]], dim=0)
+        )
+    noise_parameter = getattr(policy, "std", getattr(policy, "log_std", None))
+    if noise_parameter is not None:
+        noise_parameter.register_hook(
+            lambda grad: torch.cat([torch.zeros_like(grad[:protected]), grad[protected:]], dim=0)
+        )
+    policy.update_normalization = lambda obs: None
+    print(
+        f"[INFO] Transfer freeze active: hidden actor and first {protected} action rows are fixed; "
+        f"{output_layer.out_features - protected} upper-layer rows remain trainable."
+    )
+
+
+def override_action_std(runner: OnPolicyRunner, value: float) -> None:
+    """Apply a controlled exploration scale after initialization or stage transfer."""
+
+    if value <= 0.0:
+        raise ValueError("--action_std_override must be positive")
+    policy = runner.alg.policy
+    with torch.no_grad():
+        if hasattr(policy, "std"):
+            policy.std.fill_(value)
+            policy.std.requires_grad_(False)
+            optimizer = runner.alg.optimizer
+            if not getattr(optimizer, "_lr_hrl_positive_std_guard", False):
+                optimizer_step = optimizer.step
+
+                def guarded_optimizer_step(*args, **kwargs):
+                    result = optimizer_step(*args, **kwargs)
+                    with torch.no_grad():
+                        policy.std.clamp_(min=1.0e-4, max=2.0)
+                    return result
+
+                optimizer.step = guarded_optimizer_step
+                optimizer._lr_hrl_positive_std_guard = True
+        elif hasattr(policy, "log_std"):
+            policy.log_std.fill_(torch.log(torch.tensor(value, device=policy.log_std.device)))
+            policy.log_std.requires_grad_(False)
+        else:
+            raise RuntimeError("Policy has neither std nor log_std exploration parameters")
+    print(f"[INFO] Action exploration std fixed to: {value:.6f}")
+
+
+def override_wheel_action_std(runner: OnPolicyRunner, value: float) -> None:
+    """Increase wheel exploration without perturbing the validated leg policy."""
+
+    if value <= 0.0:
+        raise ValueError("--wheel_action_std_override must be positive")
+    policy = runner.alg.policy
+    noise_parameter = getattr(policy, "std", getattr(policy, "log_std", None))
+    if noise_parameter is None or noise_parameter.shape[-1] < 16:
+        raise RuntimeError("Wheel exploration requires at least 16 action dimensions")
+    with torch.no_grad():
+        if hasattr(policy, "std"):
+            noise_parameter[..., 12:16].fill_(value)
+        else:
+            noise_parameter[..., 12:16].fill_(
+                torch.log(torch.tensor(value, device=noise_parameter.device))
+            )
+    print(f"[INFO] Wheel action exploration std fixed to: {value:.6f}")
+
+
+def override_leg_action_std(runner: OnPolicyRunner, value: float) -> None:
+    """Limit leg-space exploration without changing hierarchical sampling."""
+
+    if value <= 0.0:
+        raise ValueError("--leg_action_std_override must be positive")
+    policy = runner.alg.policy
+    noise_parameter = getattr(policy, "std", getattr(policy, "log_std", None))
+    if noise_parameter is None or noise_parameter.shape[-1] < 12:
+        raise RuntimeError("Leg exploration requires at least 12 action dimensions")
+    with torch.no_grad():
+        if hasattr(policy, "std"):
+            noise_parameter[..., :12].fill_(value)
+        else:
+            noise_parameter[..., :12].fill_(
+                torch.log(torch.tensor(value, device=noise_parameter.device))
+            )
+    print(f"[INFO] Leg action exploration std set to: {value:.6f}")
+
+
+def load_flat_skills_into_hierarchy(runner: OnPolicyRunner, checkpoint_path: str) -> None:
+    """Migrate the 16-action skill policy without changing its initial output."""
+
+    policy = runner.alg.policy
+    actor = getattr(policy, "actor", None)
+    required = ("physical_backbone", "physical_head", "legacy_upper_head", "task_head", "skill_head")
+    if actor is None or any(not hasattr(actor, name) for name in required):
+        raise RuntimeError("--flat_skill_checkpoint requires LRHierarchicalActorCritic")
+
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    source = payload.get("model_state_dict", payload)
+    target = policy.state_dict()
+    mapping = {
+        "actor.physical_backbone.0.weight": "actor.0.weight",
+        "actor.physical_backbone.0.bias": "actor.0.bias",
+        "actor.physical_backbone.2.weight": "actor.2.weight",
+        "actor.physical_backbone.2.bias": "actor.2.bias",
+        "actor.physical_backbone.4.weight": "actor.4.weight",
+        "actor.physical_backbone.4.bias": "actor.4.bias",
+        "actor.physical_head.weight": "actor.6.weight",
+        "actor.physical_head.bias": "actor.6.bias",
+    }
+    copied = []
+    for target_key, source_key in mapping.items():
+        source_value = source.get(source_key)
+        if not isinstance(source_value, torch.Tensor) or target_key not in target:
+            raise KeyError(f"Missing compatible migration tensor: {source_key} -> {target_key}")
+        if source_value.shape != target[target_key].shape:
+            raise ValueError(
+                f"Migration shape mismatch for {source_key}: {source_value.shape} != {target[target_key].shape}"
+            )
+        target[target_key] = source_value.to(dtype=target[target_key].dtype)
+        copied.append(target_key)
+
+    source_output_weight = source.get("actor.6.weight")
+    source_output_bias = source.get("actor.6.bias")
+    physical = int(actor.physical_action_dim)
+    if not isinstance(source_output_weight, torch.Tensor) or not isinstance(source_output_bias, torch.Tensor):
+        raise KeyError("Flat checkpoint is missing actor output tensors")
+
+    # Some earlier checkpoints only contain the 16 physical actions.  In that
+    # case the hierarchy must start from a neutral output so that migration is
+    # behavior preserving.  A legacy upper policy is copied only when those
+    # rows are actually present in the source checkpoint.
+    legacy_end = physical + int(actor.upper_dim)
+    if source_output_weight.shape[0] >= legacy_end and source_output_bias.shape[0] >= legacy_end:
+        legacy_weight = source_output_weight[physical:legacy_end]
+        legacy_bias = source_output_bias[physical:legacy_end]
+        if legacy_weight.shape != target["actor.legacy_upper_head.weight"].shape:
+            raise ValueError(
+                "Legacy upper weight shape mismatch: "
+                f"{legacy_weight.shape} != {target['actor.legacy_upper_head.weight'].shape}"
+            )
+        target["actor.legacy_upper_head.weight"] = legacy_weight.to(
+            dtype=target["actor.legacy_upper_head.weight"].dtype
+        )
+        target["actor.legacy_upper_head.bias"] = legacy_bias.to(
+            dtype=target["actor.legacy_upper_head.bias"].dtype
+        )
+        copied.extend(("actor.legacy_upper_head.weight", "actor.legacy_upper_head.bias"))
+    else:
+        target["actor.legacy_upper_head.weight"].zero_()
+        target["actor.legacy_upper_head.bias"].zero_()
+        copied.append("actor.legacy_upper_head=zeros(no source upper policy)")
+
+    for key in tuple(target):
+        if key.startswith("critic.") or key.startswith("actor_obs_normalizer."):
+            source_value = source.get(key)
+            if isinstance(source_value, torch.Tensor) and source_value.shape == target[key].shape:
+                target[key] = source_value.to(dtype=target[key].dtype)
+                copied.append(key)
+
+    source_std = source.get("std")
+    if isinstance(source_std, torch.Tensor) and "std" in target:
+        target["std"][:physical] = source_std[:physical].to(dtype=target["std"].dtype)
+        target["std"][physical:] = 0.18
+        copied.append("std[physical]")
+
+    policy.load_state_dict(target, strict=True)
+
+    # Fail early if a supposedly compatible migration changed any physical
+    # actor tensor.  This catches silent key or shape drift before simulation.
+    loaded = policy.state_dict()
+    for target_key, source_key in mapping.items():
+        source_value = source[source_key].to(device=loaded[target_key].device, dtype=loaded[target_key].dtype)
+        if not torch.equal(loaded[target_key], source_value):
+            raise RuntimeError(f"Physical actor migration verification failed: {source_key} -> {target_key}")
+    print(f"[INFO] Structured skill migration from: {checkpoint_path}")
+    print(f"[INFO] Migrated tensors: {copied}")
+
+
+def configure_structured_training_stage(runner: OnPolicyRunner, stage: str) -> None:
+    """Set the trainable portion of the structured actor for one curriculum stage."""
+
+    policy = runner.alg.policy
+    actor = getattr(policy, "actor", None)
+    if actor is None or not hasattr(actor, "physical_backbone"):
+        if stage != "joint":
+            raise RuntimeError(f"Training stage '{stage}' requires LRHierarchicalActorCritic")
+        return
+
+    for parameter in policy.parameters():
+        parameter.requires_grad_(True)
+
+    if stage == "support_reference":
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        actor.support_reference_prototype.requires_grad_(True)
+        frozen = ()
+    elif stage == "support_gate":
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        actor.support_gate_prototype.requires_grad_(True)
+        frozen = ()
+    elif stage == "support_gate_adapter":
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        for module in (actor.support_residual_encoder, actor.support_gate_head):
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        frozen = ()
+    elif stage == "support":
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        for module in (
+            actor.support_residual_encoder,
+            actor.support_residual_head,
+            actor.support_reference_head,
+            actor.support_gate_head,
+        ):
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        actor.support_reference_prototype.requires_grad_(True)
+        actor.support_gate_prototype.requires_grad_(True)
+        frozen = ()
+    elif stage == "wheel_skill":
+        if actor.wheel_skill_encoder is None or actor.wheel_skill_head is None:
+            raise RuntimeError("Training stage 'wheel_skill' requires a wheel command packet")
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        for module in (actor.wheel_skill_encoder, actor.wheel_skill_head):
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        actor.wheel_kinematic_matrix.requires_grad_(True)
+        for parameter_name in (
+            "wheel_drive_breakaway",
+            "wheel_arc_drive_compensation",
+            "wheel_slip_contraction",
+            "wheel_response_contraction",
+            "wheel_overshoot_contraction",
+            "wheel_yaw_breakaway",
+            "wheel_yaw_drive_bias",
+        ):
+            parameter = getattr(actor, parameter_name, None)
+            if parameter is not None:
+                parameter.requires_grad_(True)
+        frozen = ()
+    elif stage == "payload_wheel":
+        encoder = getattr(actor, "wheel_payload_skill_encoder", None)
+        head = getattr(actor, "wheel_payload_skill_head", None)
+        if encoder is None or head is None:
+            raise RuntimeError(
+                "Training stage 'payload_wheel' requires payload-conditioned wheel skill"
+            )
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        for module in (encoder, head):
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        frozen = ()
+    elif stage == "wheel_adapter":
+        adapter = getattr(actor, "wheel_confidence_adapter_matrix", None)
+        if adapter is None:
+            raise RuntimeError(
+                "Training stage 'wheel_adapter' requires the confidence adapter"
+            )
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        adapter.requires_grad_(True)
+        frozen = ()
+    elif stage == "transient_adapter":
+        adapter = getattr(actor, "wheel_transient_adapter_gain_logit", None)
+        if adapter is None:
+            raise RuntimeError(
+                "Training stage 'transient_adapter' requires the structured transient adapter"
+            )
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        adapter.requires_grad_(True)
+        frozen = ()
+    elif stage == "mobility_skill":
+        if actor.wheel_skill_encoder is None or actor.wheel_skill_head is None:
+            raise RuntimeError("Training stage 'mobility_skill' requires a wheel command packet")
+        if actor.wheel_support_projection is None:
+            raise RuntimeError("Training stage 'mobility_skill' requires wheel-support conditioning")
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        for module in (
+            actor.wheel_skill_encoder,
+            actor.wheel_skill_head,
+            actor.wheel_support_projection,
+            actor.support_residual_encoder,
+            actor.support_residual_head,
+            actor.support_reference_head,
+            actor.support_gate_head,
+        ):
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        actor.wheel_kinematic_matrix.requires_grad_(True)
+        for parameter_name in (
+            "wheel_drive_breakaway",
+            "wheel_arc_drive_compensation",
+            "wheel_slip_contraction",
+            "wheel_response_contraction",
+            "wheel_overshoot_contraction",
+            "wheel_yaw_breakaway",
+            "wheel_yaw_drive_bias",
+        ):
+            parameter = getattr(actor, parameter_name, None)
+            if parameter is not None:
+                parameter.requires_grad_(True)
+        actor.support_reference_prototype.requires_grad_(True)
+        actor.support_gate_prototype.requires_grad_(True)
+        if actor.mobility_support_reference is not None:
+            actor.mobility_support_reference.requires_grad_(True)
+        frozen = ()
+    elif stage in ("locomotion_core", "locomotion"):
+        for parameter in actor.parameters():
+            parameter.requires_grad_(False)
+        modules = (actor.physical_head,)
+        if stage == "locomotion":
+            modules = modules + (actor.option_residual_head,)
+        for module in modules:
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+                row_mask = torch.zeros_like(parameter)
+                row_mask[12:16] = 1.0
+                parameter.register_hook(lambda grad, mask=row_mask: grad * mask)
+        frozen = ()
+    elif stage == "upper":
+        frozen = (
+            actor.physical_backbone,
+            actor.physical_head,
+            actor.option_encoder,
+            actor.film_head,
+            actor.option_residual_head,
+            actor.support_residual_encoder,
+            actor.support_residual_head,
+            actor.support_reference_head,
+            actor.support_gate_head,
+        )
+        actor.support_reference_prototype.requires_grad_(False)
+        actor.support_gate_prototype.requires_grad_(False)
+    elif stage == "adapter":
+        frozen = (actor.physical_backbone, actor.physical_head)
+    elif stage in ("tail", "robust"):
+        # Keep the early proprioceptive representation fixed while adapting the
+        # final skill features and hierarchy to the hard distribution.
+        frozen = tuple(list(actor.physical_backbone.children())[:4])
+    else:
+        frozen = ()
+    for module in frozen:
+        for parameter in module.parameters():
+            parameter.requires_grad_(False)
+    for parameter in actor.legacy_upper_head.parameters():
+        parameter.requires_grad_(False)
+
+    # During hierarchy warm-up, preserve both the mean and exploration scale
+    # of the validated physical skill policy.  The upper action distribution
+    # is learned through the hierarchy losses and does not need std adaptation.
+    if stage in (
+        "upper",
+        "adapter",
+        "support_reference",
+        "support_gate",
+        "support_gate_adapter",
+        "support",
+        "wheel_skill",
+        "payload_wheel",
+        "wheel_adapter",
+        "transient_adapter",
+        "mobility_skill",
+        "locomotion_core",
+        "locomotion",
+    ):
+        noise_parameter = getattr(policy, "std", getattr(policy, "log_std", None))
+        if noise_parameter is not None:
+            noise_parameter.requires_grad_(False)
+
+    # All stages use the normalization inherited from the validated skill policy.
+    policy.update_normalization = lambda obs: None
+    trainable = sum(parameter.numel() for parameter in policy.parameters() if parameter.requires_grad)
+    total = sum(parameter.numel() for parameter in policy.parameters())
+    print(f"[INFO] Structured stage={stage}: trainable={trainable}/{total} parameters")
+
+
+def configure_tactic_training_stage(
+    runner: OnPolicyRunner, stage: str
+) -> None:
+    """Keep TACTIC hierarchy learning separate from actuator decoding."""
+
+    policy = runner.alg.policy
+    actor = getattr(policy, "actor", None)
+    set_stage = getattr(runner.alg, "set_training_stage", None)
+    if actor is None or set_stage is None:
+        raise RuntimeError(
+            "TACTIC training stage requires TACTICPPO and TACTICActor"
+        )
+    set_stage(stage)
+
+    executor_parameters = list(
+        actor.physical_executor_named_parameters()
+    )
+    if stage == "upper":
+        unexpectedly_trainable = [
+            name
+            for name, parameter in executor_parameters
+            if parameter.requires_grad
+        ]
+        if unexpectedly_trainable:
+            raise RuntimeError(
+                "Upper-stage physical executor was not fully frozen: "
+                + ", ".join(unexpectedly_trainable)
+            )
+        actor_parameters = dict(actor.named_parameters())
+        required_hierarchy_parameters = (
+            "task_query.weight",
+            "motion_skill_logits_head.weight",
+            "interaction_skill_logits_head.weight",
+            "task_outcome_head.weight",
+            "skill_effect_head.weight",
+        )
+        unexpectedly_frozen = [
+            name
+            for name in required_hierarchy_parameters
+            if not actor_parameters[name].requires_grad
+        ]
+        if unexpectedly_frozen:
+            raise RuntimeError(
+                "Upper-stage hierarchy parameters were frozen: "
+                + ", ".join(unexpectedly_frozen)
+            )
+    elif stage == "stability":
+        expected_prefixes = (
+            "physical_backbone.",
+            "physical_head.",
+        )
+        unexpected_actor_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if parameter.requires_grad
+            and not name.startswith(expected_prefixes)
+        ]
+        if unexpected_actor_parameters:
+            raise RuntimeError(
+                "stability stage exposed unrelated actor parameters: "
+                + ", ".join(unexpected_actor_parameters)
+            )
+        expected_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if name.startswith(expected_prefixes)
+            and not parameter.requires_grad
+        ]
+        if expected_parameters:
+            raise RuntimeError(
+                "stability executor parameters were frozen: "
+                + ", ".join(expected_parameters)
+            )
+    elif stage in (
+        "decomposition",
+        "motion_selector",
+        "interaction_selector",
+        "motion_skill",
+        "payload_motion",
+    ):
+        if stage == "decomposition":
+            module_names = actor.DECOMPOSITION_MODULE_NAMES
+            parameter_names = ()
+        elif stage == "motion_selector":
+            module_names = actor.MOTION_SELECTOR_MODULE_NAMES
+            parameter_names = ()
+        elif stage == "interaction_selector":
+            module_names = actor.INTERACTION_SELECTOR_MODULE_NAMES
+            parameter_names = ()
+        elif stage == "motion_skill":
+            module_names = actor.MOTION_SKILL_MODULE_NAMES
+            parameter_names = ()
+        else:
+            module_names = actor.PAYLOAD_MOTION_MODULE_NAMES
+            parameter_names = actor.PAYLOAD_MOTION_PARAMETER_NAMES
+        expected_prefixes = tuple(f"{name}." for name in module_names)
+        unexpected_actor_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if parameter.requires_grad
+            and not name.startswith(expected_prefixes)
+            and name not in parameter_names
+        ]
+        if unexpected_actor_parameters:
+            raise RuntimeError(
+                f"{stage} stage exposed unrelated actor parameters: "
+                + ", ".join(unexpected_actor_parameters)
+            )
+        frozen_stage_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if name.startswith(expected_prefixes)
+            and not parameter.requires_grad
+        ]
+        frozen_stage_parameters.extend(
+            name
+            for name in parameter_names
+            if not dict(actor.named_parameters())[name].requires_grad
+        )
+        if frozen_stage_parameters:
+            raise RuntimeError(
+                f"{stage} parameters were frozen: "
+                + ", ".join(frozen_stage_parameters)
+            )
+    elif stage == "recovery":
+        adapter_prefixes = tuple(
+            f"{name}."
+            for name in actor.RECOVERY_ADAPTER_MODULE_NAMES
+        )
+        unexpected_actor_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if parameter.requires_grad
+            and not name.startswith(adapter_prefixes)
+        ]
+        if unexpected_actor_parameters:
+            raise RuntimeError(
+                "Recovery stage exposed non-adapter actor parameters: "
+                + ", ".join(unexpected_actor_parameters)
+            )
+        frozen_adapter_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if name.startswith(adapter_prefixes)
+            and not parameter.requires_grad
+        ]
+        if frozen_adapter_parameters:
+            raise RuntimeError(
+                "Recovery adapter parameters were frozen: "
+                + ", ".join(frozen_adapter_parameters)
+            )
+    elif stage == "survival":
+        expected_prefixes = (
+            "payload_survival_encoder.",
+            "payload_survival_head.",
+        )
+        unexpected_actor_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if parameter.requires_grad
+            and not name.startswith(expected_prefixes)
+        ]
+        if unexpected_actor_parameters:
+            raise RuntimeError(
+                "Survival stage exposed unrelated actor parameters: "
+                + ", ".join(unexpected_actor_parameters)
+            )
+        frozen_survival_parameters = [
+            name
+            for name, parameter in actor.named_parameters()
+            if name.startswith(expected_prefixes)
+            and not parameter.requires_grad
+        ]
+        if frozen_survival_parameters:
+            raise RuntimeError(
+                "Payload-survival head was frozen: "
+                + ", ".join(frozen_survival_parameters)
+            )
+
+    frozen_executor = sum(
+        parameter.numel()
+        for _, parameter in executor_parameters
+        if not parameter.requires_grad
+    )
+    trainable = sum(
+        parameter.numel()
+        for parameter in policy.parameters()
+        if parameter.requires_grad
+    )
+    total = sum(parameter.numel() for parameter in policy.parameters())
+    print(
+        f"[INFO] TACTIC stage={stage}: trainable={trainable}/{total}, "
+        f"frozen_physical_executor={frozen_executor}"
+    )
+
+
+def reset_physical_conditioner(runner: OnPolicyRunner) -> None:
+    """Restore the validated physical policy before committed-option adaptation."""
+
+    actor = getattr(runner.alg.policy, "actor", None)
+    required = (
+        "film_head",
+        "option_residual_head",
+        "support_residual_head",
+        "support_reference_head",
+        "support_gate_head",
+    )
+    if actor is None or any(not hasattr(actor, name) for name in required):
+        raise RuntimeError("--reset_physical_conditioner requires LRDeepHierarchicalActorCritic")
+    with torch.no_grad():
+        for module in (
+            actor.film_head,
+            actor.option_residual_head,
+            actor.support_residual_head,
+            actor.support_reference_head,
+            actor.support_gate_head,
+        ):
+            module.weight.zero_()
+            if module.bias is not None:
+                module.bias.zero_()
+        actor.support_reference_prototype.zero_()
+        actor.support_gate_prototype.zero_()
+    print("[INFO] Physical FiLM and option residual outputs reset to zero.")
+
+
+def reset_tactic_successor(runner: OnPolicyRunner) -> None:
+    """Restart transition grounding without discarding the learned hierarchy."""
+
+    policy = runner.alg.policy
+    actor = getattr(policy, "actor", None)
+    required_modules = (
+        "motion_execution_head",
+        "motion_execution_confidence_head",
+        "wheel_residual_head",
+        "wheel_skill_gate_head",
+    )
+    if actor is None or any(
+        not hasattr(actor, name) for name in required_modules
+    ):
+        raise RuntimeError(
+            "--reset_tactic_successor requires TACTICActorCritic"
+        )
+    with torch.no_grad():
+        for name in (
+            "motion_execution_head",
+            "wheel_residual_head",
+            "wheel_skill_gate_head",
+        ):
+            module = getattr(actor, name)
+            module.weight.zero_()
+            if module.bias is not None:
+                module.bias.zero_()
+        confidence = actor.motion_execution_confidence_head
+        confidence.weight.zero_()
+        confidence.bias.fill_(-2.0)
+        actor.wheel_skill_gate_logit.fill_(-0.50)
+        actor.hierarchy_cbf_dual.fill_(0.50)
+        actor.hierarchy_clf_dual.fill_(0.35)
+        actor.hierarchy_cbf_violation_ema.zero_()
+        actor.hierarchy_clf_violation_ema.zero_()
+        actor.hierarchy_constraint_updates.zero_()
+        policy.tactic_training_updates.zero_()
+    print(
+        "[INFO] TACTIC successor grounding reset; task and skill "
+        "representations retained."
+    )
+
+
+@hydra_task_config(args_cli.task, args_cli.agent)
+def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
+    """Train with RSL-RL agent."""
+    # override configurations with non-hydra CLI arguments
+    agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+    env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+    agent_cfg.max_iterations = (
+        args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
+    )
+    if args_cli.save_interval is not None:
+        agent_cfg.save_interval = args_cli.save_interval
+    positive_overrides = (
+        ("policy_learning_rate_override", agent_cfg.algorithm, "learning_rate"),
+        (
+            "auxiliary_learning_rate_override",
+            agent_cfg.algorithm,
+            "auxiliary_learning_rate",
+        ),
+        (
+            "successor_learning_rate_override",
+            agent_cfg.algorithm,
+            "successor_adapter_learning_rate",
+        ),
+        (
+            "physical_adapter_lr_scale_override",
+            agent_cfg.algorithm,
+            "physical_adapter_lr_scale",
+        ),
+        (
+            "release_target_radius_override",
+            agent_cfg.policy,
+            "release_target_radius",
+        ),
+    )
+    for argument_name, config, field_name in positive_overrides:
+        value = getattr(args_cli, argument_name)
+        if value is None:
+            continue
+        value = float(value)
+        if value <= 0.0:
+            raise ValueError(f"--{argument_name} must be positive")
+        if not hasattr(config, field_name):
+            raise RuntimeError(
+                f"--{argument_name} is not supported by this agent"
+            )
+        setattr(config, field_name, value)
+    if args_cli.pure_hrl_objectives:
+        algorithm_fields = (
+            "control_prediction_coef",
+            "constraint_multiplier_coef",
+            "task_control_objective_coef",
+            "skill_predictive_control_coef",
+        )
+        policy_fields = (
+            "constraint_utility_gain",
+            "recovery_task_margin_gain",
+            "recovery_adapter_task_gain",
+            "recovery_adapter_motion_gain",
+            "recovery_adapter_interaction_gain",
+        )
+        missing = [
+            field_name
+            for config, field_names in (
+                (agent_cfg.algorithm, algorithm_fields),
+                (agent_cfg.policy, policy_fields),
+            )
+            for field_name in field_names
+            if not hasattr(config, field_name)
+        ]
+        if missing:
+            raise RuntimeError(
+                "--pure_hrl_objectives requires TANDEM-HRL fields: "
+                + ", ".join(missing)
+            )
+        for field_name in algorithm_fields:
+            setattr(agent_cfg.algorithm, field_name, 0.0)
+        for field_name in policy_fields:
+            setattr(agent_cfg.policy, field_name, 0.0)
+        print(
+            "[INFO] Pure HRL objectives enabled; control-derived auxiliary "
+            "losses and recovery biases are disabled."
+        )
+    if args_cli.release_target_radius_override is not None:
+        tactic_ppo_module.RELEASE_TARGET_RADIUS = float(
+            args_cli.release_target_radius_override
+        )
+    if args_cli.interaction_phase_prior_gain_override is not None:
+        gain = float(args_cli.interaction_phase_prior_gain_override)
+        if gain < 0.0:
+            raise ValueError(
+                "--interaction_phase_prior_gain_override must be nonnegative"
+            )
+        if not hasattr(agent_cfg.policy, "interaction_phase_prior_gain"):
+            raise RuntimeError(
+                "--interaction_phase_prior_gain_override requires TACTIC"
+            )
+        agent_cfg.policy.interaction_phase_prior_gain = gain
+    mission_cfg = getattr(
+        getattr(env_cfg, "commands", None), "locomotion", None
+    )
+    if args_cli.pure_hrl_objectives:
+        if mission_cfg is None or not hasattr(
+            mission_cfg, "automatic_recovery_task_candidate"
+        ):
+            raise RuntimeError(
+                "--pure_hrl_objectives requires a TANDEM-HRL mission command"
+            )
+        mission_cfg.automatic_recovery_task_candidate = False
+    if args_cli.composition_probe_probability_override is not None:
+        probability = float(
+            args_cli.composition_probe_probability_override
+        )
+        if not 0.0 <= probability <= 1.0:
+            raise ValueError(
+                "--composition_probe_probability_override must be in [0, 1]"
+            )
+        if mission_cfg is None or not hasattr(
+            mission_cfg, "composition_probe_probability"
+        ):
+            raise RuntimeError(
+                "Composition probes require a TANDEM-HRL mission command"
+            )
+        mission_cfg.composition_probe_probability = probability
+        print(
+            "[INFO] Composition probe probability set to: "
+            f"{probability:.3f}"
+        )
+    if args_cli.composition_probe_levels_ahead_override is not None:
+        levels_ahead = int(
+            args_cli.composition_probe_levels_ahead_override
+        )
+        if levels_ahead < 0 or levels_ahead > 4:
+            raise ValueError(
+                "--composition_probe_levels_ahead_override must be in [0, 4]"
+            )
+        if mission_cfg is None or not hasattr(
+            mission_cfg, "composition_probe_levels_ahead"
+        ):
+            raise RuntimeError(
+                "Composition probes require a TANDEM-HRL mission command"
+            )
+        mission_cfg.composition_probe_levels_ahead = levels_ahead
+        print(
+            "[INFO] Composition probe horizon set to: "
+            f"{levels_ahead} levels"
+        )
+
+    # set the environment seed
+    # note: certain randomizations occur in the environment initialization so we set the seed here
+    env_cfg.seed = agent_cfg.seed
+    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    # check for invalid combination of CPU device with distributed training
+    if args_cli.distributed and args_cli.device is not None and "cpu" in args_cli.device:
+        raise ValueError(
+            "Distributed training is not supported when using CPU device. "
+            "Please use GPU device (e.g., --device cuda) for distributed training."
+        )
+
+    # multi-gpu training configuration
+    if args_cli.distributed:
+        env_cfg.sim.device = f"cuda:{app_launcher.local_rank}"
+        agent_cfg.device = f"cuda:{app_launcher.local_rank}"
+
+        # set seed to have diversity in different threads
+        seed = agent_cfg.seed + app_launcher.local_rank
+        env_cfg.seed = seed
+        agent_cfg.seed = seed
+
+    # specify directory for logging experiments
+    log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
+    log_root_path = os.path.abspath(log_root_path)
+    print(f"[INFO] Logging experiment in directory: {log_root_path}")
+    # specify directory for logging runs: {time-stamp}_{run_name}
+    log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    # The Ray Tune workflow extracts experiment name using the logging line below, hence, do not
+    # change it (see PR #2346, comment-2819298849)
+    print(f"Exact experiment name requested from command line: {log_dir}")
+    if agent_cfg.run_name:
+        log_dir += f"_{agent_cfg.run_name}"
+    log_dir = os.path.join(log_root_path, log_dir)
+
+    # set the IO descriptors export flag if requested
+    if isinstance(env_cfg, ManagerBasedRLEnvCfg):
+        env_cfg.export_io_descriptors = args_cli.export_io_descriptors
+    else:
+        logger.warning(
+            "IO descriptors are only supported for manager based RL environments. No IO descriptors will be exported."
+        )
+
+    # set the log directory for the environment (works for all environment types)
+    env_cfg.log_dir = log_dir
+
+    # create isaac environment
+    env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+
+    # convert to single-agent instance if required by the RL algorithm
+    if isinstance(env.unwrapped, DirectMARLEnv):
+        env = multi_agent_to_single_agent(env)
+
+    # save resume path before creating a new log_dir
+    if args_cli.resume_checkpoint:
+        resume_path = os.path.abspath(os.path.expanduser(args_cli.resume_checkpoint))
+        if not os.path.isfile(resume_path):
+            raise FileNotFoundError(f"Resume checkpoint does not exist: {resume_path}")
+    elif agent_cfg.resume or agent_cfg.algorithm.class_name == "Distillation":
+        resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+
+    # wrap for video recording
+    if args_cli.video:
+        video_kwargs = {
+            "video_folder": os.path.join(log_dir, "videos", "train"),
+            "step_trigger": lambda step: step % args_cli.video_interval == 0,
+            "video_length": args_cli.video_length,
+            "disable_logger": True,
+        }
+        print("[INFO] Recording videos during training.")
+        print_dict(video_kwargs, nesting=4)
+        env = gym.wrappers.RecordVideo(env, **video_kwargs)
+
+    start_time = time.time()
+
+    # wrap around environment for rsl-rl
+    env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+    if args_cli.multi_teacher:
+        from quadruped_arm.tasks.manager_based.maniploco.mdp.multi_teacher import (
+            MultiTeacherVecEnv,
+        )
+
+        env = MultiTeacherVecEnv(
+            env,
+            teacher_checkpoint=args_cli.teacher_checkpoint,
+            teacher_blend_start=args_cli.teacher_blend_start,
+            teacher_blend_end=args_cli.teacher_blend_end,
+            teacher_blend_steps=args_cli.teacher_blend_steps,
+        )
+        print(
+            "[INFO] Multi-teacher lower-body mode enabled: "
+            "ZYB stability + conservative transient + neutral recovery."
+        )
+
+    # create runner from rsl-rl
+    if agent_cfg.class_name == "OnPolicyRunner":
+        runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
+    elif agent_cfg.class_name == "DistillationRunner":
+        runner = DistillationRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
+    else:
+        raise ValueError(f"Unsupported runner class: {agent_cfg.class_name}")
+    # write git state to logs
+    runner.add_git_repo_to_log(__file__)
+    if args_cli.partial_init_checkpoint:
+        load_partial_policy(runner, args_cli.partial_init_checkpoint)
+    if args_cli.tactic_init_checkpoint:
+        if not isinstance(runner.alg.policy, TACTICActorCritic):
+            raise RuntimeError(
+                "--tactic_init_checkpoint is only valid for TACTIC-HRL"
+            )
+        copied = load_zyb_baseline_physical(
+            runner.alg.policy, args_cli.tactic_init_checkpoint
+        )
+        print(
+            "[INFO] TACTIC physical initialization from: "
+            f"{args_cli.tactic_init_checkpoint}"
+        )
+        print(f"[INFO] Verified migrated tensors: {copied}")
+    if args_cli.flat_skill_checkpoint:
+        load_flat_skills_into_hierarchy(runner, args_cli.flat_skill_checkpoint)
+    if args_cli.freeze_transferred_actor:
+        freeze_transferred_actor(runner, args_cli.physical_action_dim)
+    # load the checkpoint
+    if args_cli.resume_checkpoint or agent_cfg.resume or agent_cfg.algorithm.class_name == "Distillation":
+        print(f"[INFO]: Loading model checkpoint from: {resume_path}")
+        # Stage transitions normally keep the model/iteration and rebuild optimizer state.
+        runner.load(
+            resume_path,
+            load_optimizer=not (args_cli.resume_model_only or args_cli.resume_checkpoint),
+        )
+        if args_cli.resume_iteration_override is not None:
+            if args_cli.resume_iteration_override < 0:
+                raise ValueError("--resume_iteration_override must be non-negative")
+            runner.current_learning_iteration = args_cli.resume_iteration_override
+            print(f"[INFO] Resume iteration overridden to: {runner.current_learning_iteration}")
+    if args_cli.reset_physical_conditioner:
+        reset_physical_conditioner(runner)
+    if args_cli.reset_tactic_successor:
+        reset_tactic_successor(runner)
+    if args_cli.stability_teacher_only:
+        if not isinstance(runner.alg.policy, TACTICActorCritic):
+            raise RuntimeError(
+                "--stability_teacher_only is only valid for TACTIC-HRL"
+            )
+        runner.alg.policy.actor.stability_teacher_only = True
+        print(
+            "[INFO] Stability teacher mode enabled: TACTIC leg/wheel "
+            "actions are routed through the migrated ZYB-v0 executor."
+        )
+    if isinstance(runner.alg.policy, TACTICActorCritic):
+        configure_tactic_training_stage(
+            runner, args_cli.training_stage
+        )
+    else:
+        configure_structured_training_stage(runner, args_cli.training_stage)
+    if args_cli.action_std_override is not None:
+        override_action_std(runner, args_cli.action_std_override)
+    if args_cli.leg_action_std_override is not None:
+        override_leg_action_std(runner, args_cli.leg_action_std_override)
+    if args_cli.wheel_action_std_override is not None:
+        override_wheel_action_std(runner, args_cli.wheel_action_std_override)
+
+    # dump the configuration into log-directory
+    dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
+    dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
+
+    # run training
+    randomize_initial_episode_age = not isinstance(
+        runner.alg.policy, TACTICActorCritic
+    )
+    runner.learn(
+        num_learning_iterations=agent_cfg.max_iterations,
+        init_at_random_ep_len=randomize_initial_episode_age,
+    )
+
+    print(f"Training time: {round(time.time() - start_time, 2)} seconds")
+
+    # close the simulator
+    env.close()
+
+
+if __name__ == "__main__":
+    # run the main function
+    main()
+    # close sim app
+    simulation_app.close()

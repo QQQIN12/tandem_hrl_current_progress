@@ -1,0 +1,210 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+======Missing terms====== 
+[]
+ =======================
+wheel_actuator=ImplicitActuator
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-17_22-21-16.log[0m
+[36m======================================================================================[0m
+
+[33m22:21:16 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 271828
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 833.3333333333334
+	Environment step-size : 0.03333333333333333
+[33m22:21:16 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 9.018955 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 4
+	Environment spacing   : 4.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.786000 seconds
+[33m22:21:26 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+[INFO] Command Manager:  <CommandManager> contains 2 active terms.
++---------------------------------------------+
+|             Active Command Terms            |
++-------+------------+------------------------+
+| Index | Name       |          Type          |
++-------+------------+------------------------+
+|   0   | locomotion | UniformVelocityCommand |
+|   1   | ee_goal    | EeSphericalGoalCommand |
++-------+------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++-----------+------------------------+
+|   Index   | Name                   |
++-----------+------------------------+
+|     0     | reset_root             |
+|     1     | reset_joints           |
+|     2     | init_priv              |
+|     3     | reset_rewards          |
++-----------+------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 3 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 16)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | leg_pos     |          12 |
+|   1    | wheel_vel   |           4 |
+|   2    | arm_ik      |           0 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++--------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (876,)) |
++----------------+-------------+-------------------+
+|     Index      | Name        |       Shape       |
++----------------+-------------+-------------------+
+|       0        | obs         |       (876,)      |
++----------------+-------------+-------------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 4 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | bad_contact |  False   |
+|   2   | tilt        |  False   |
+|   3   | low_height  |  False   |
++-------+-------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 42 active terms.
++---------------------------------------------------------+
+|                   Active Reward Terms                   |
++-------+--------------------------+----------------------+
+| Index | Name                     |               Weight |
++-------+--------------------------+----------------------+
+|   0   | term_bad_contact         |              -3000.0 |
+|   1   | term_tilt                |              -3000.0 |
+|   2   | term_low_height          |              -3000.0 |
+|   3   | leg_action_l2            |               -0.003 |
+|   4   | tracking_lin_vel         |                  0.0 |
+|   5   | tracking_lin_vel_x_exp   |   0.8999999999999999 |
+|   6   | tracking_ang_vel_yaw_l1  |                  0.0 |
+|   7   | tracking_ang_vel_yaw_exp |   0.8999999999999999 |
+|   8   | tracking_lin_vel_y_l2    |                  0.0 |
+|   9   | tracking_lin_vel_z_l2    |                  0.0 |
+|   10  | survive                  |                  0.0 |
+|   11  | foot_contacts_z          |                  0.0 |
+|   12  | torques                  |             -7.5e-06 |
+|   13  | tracking_lin_vel_y       |                  0.0 |
+|   14  | lin_vel_z                | -0.44999999999999996 |
+|   15  | ang_vel_xy               |                -0.06 |
+|   16  | tracking_ang_vel         |                0.075 |
+|   17  | work                     |              -0.0009 |
+|   18  | dof_acc                  |            -2.25e-07 |
+|   19  | action_rate              |              -0.0045 |
+|   20  | dof_pos_limits           |                 -3.0 |
+|   21  | delta_torques            |               -3e-08 |
+|   22  | collision                |                 -3.0 |
+|   23  | walking_dof              |                 0.15 |
+|   24  | hip_pos                  |                -0.06 |
+|   25  | feet_jerk                |               -6e-05 |
+|   26  | alive                    |                  0.3 |
+|   27  | feet_drag                |               -0.024 |
+|   28  | feet_contact_forces      |              -0.0003 |
+|   29  | roll                     |                 -0.3 |
+|   30  | base_height              |                 -1.5 |
+|   31  | tracking_lin_vel_max     |                  0.3 |
+|   32  | flat_orientation_l2      |                -0.15 |
+|   33  | air_time_variance        | -0.44999999999999996 |
+|   34  | feet_height              |                  0.0 |
+|   35  | feet_air_time            |                0.015 |
+|   36  | update_last_buffers      |                  0.0 |
+|   37  | wheel_idle_speed         |              -0.0009 |
+|   38  | wheel_action_l2          |              -0.0003 |
+|   39  | wheel_action_rate        |              -0.0006 |
+|   40  | wheel_forward_use        |                 0.18 |
+|   41  | wheel_turn_support       |                0.135 |
++-------+--------------------------+----------------------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+wheel_ids= [15, 16, 17, 18] wheel_names= ['FL_foot_wheel_joint', 'FR_foot_wheel_joint', 'RL_foot_wheel_joint', 'RR_foot_wheel_joint']
+reset_force_by_body= [('base', 0.0), ('FL_hip', 0.0), ('FL_thigh', 0.0), ('FL_calf', 30.473215103149414), ('FL_foot', 1390.69091796875), ('FR_hip', 0.0), ('FR_thigh', 0.0), ('FR_calf', 146.71861267089844), ('FR_foot', 548.3348388671875), ('RL_hip', 0.0), ('RL_thigh', 0.0), ('RL_calf', 0.0), ('RL_foot', 277.1912841796875), ('RR_hip', 0.0), ('RR_thigh', 0.0), ('RR_calf', 0.0), ('RR_foot', 719.3480224609375), ('link1', 0.0), ('link2', 0.0), ('link3', 0.0), ('link4', 0.0), ('link5', 0.0), ('link6', 0.0), ('link7', 0.0), ('link8', 0.0)]
+reset_root_z= 0.5799999833106995 reset_foot_z= [0.11998165398836136, 0.12313850969076157, 0.13302186131477356, 0.1332646906375885] reset_foot_names= ['FL_foot', 'FR_foot', 'RL_foot', 'RR_foot'] reset_contact_force_shape= (4, 25, 3) reset_contact_force_max= 1390.69091796875
+zero post_reset_wheel_vel [0.0, 0.0, 0.0, 0.0]
+zero joint_vel_target [0.0, 0.0, 0.0, 0.0]
+zero computed_torque [-3.035944828866377e-09, -7.0312879962841635e-09, 1.8273244029032298e-09, -1.6387122769856433e-09]
+zero applied_torque [-3.035944828866377e-09, -7.0312879962841635e-09, 1.8273244029032298e-09, -1.6387122769856433e-09]
+zero contact_force_max 0.0
+zero mean_vx= -0.2078649252653122 mean_wz= -0.0008964798180386424 mean_wheel= [-0.030016548931598663, -0.2015463262796402, 0.4264158010482788, 0.4626940190792084] first_wheel= [-2.748932192986331e-09, -2.8165318965989172e-09, -7.83514053637191e-09, 7.83217757316379e-09] last_wheel= [-0.430353045463562, -1.8852592706680298, 0.7368639707565308, 0.5649554133415222] first_vx= 0.000787207973189652 last_vx= -0.16249427199363708
+all_plus post_reset_wheel_vel [0.0, 0.0, 0.0, 0.0]
+all_plus joint_vel_target [4.0, 4.0, 4.0, 4.0]
+all_plus computed_torque [0.5139138698577881, 0.3488397002220154, 0.9828492403030396, 0.5297129154205322]
+all_plus applied_torque [0.5139138698577881, 0.3488397002220154, 0.9828492403030396, 0.5297129154205322]
+all_plus contact_force_max 0.0
+all_plus mean_vx= -0.11126819252967834 mean_wz= 0.009671986103057861 mean_wheel= [0.5097952485084534, 0.838224470615387, 0.7634328603744507, 0.7808272242546082] first_wheel= [3.081909418106079, 3.3861231803894043, 2.3380587100982666, 3.2547390460968018] last_wheel= [0.16571567952632904, 0.06009107828140259, 0.8513674736022949, -0.20396563410758972] first_vx= 0.00017733912682160735 last_vx= -0.05579370632767677
+all_minus post_reset_wheel_vel [0.0, 0.0, 0.0, 0.0]
+all_minus joint_vel_target [-4.0, -4.0, -4.0, -4.0]
+all_minus computed_torque [-0.6208509206771851, -0.6271722316741943, -0.49066829681396484, -0.8856422901153564]
+all_minus applied_torque [-0.6208509206771851, -0.6271722316741943, -0.49066829681396484, -0.8856422901153564]
+all_minus contact_force_max 0.05122796818614006
+all_minus mean_vx= -0.17866766452789307 mean_wz= -0.005599472671747208 mean_wheel= [-0.18229477107524872, 0.0257393941283226, -0.37762928009033203, -0.6567847728729248] first_wheel= [-3.018900156021118, -2.9470319747924805, -3.1884098052978516, -2.4535152912139893] last_wheel= [-0.21530207991600037, -0.473297655582428, 1.12446129322052, 0.4379212260246277] first_vx= -0.0006219364004209638 last_vx= -0.12720218300819397
+yaw_positive post_reset_wheel_vel [0.0, 0.0, 0.0, 0.0]
+yaw_positive joint_vel_target [-4.0, 4.0, -4.0, 4.0]
+yaw_positive computed_torque [-0.7409444451332092, 0.5401428937911987, -0.5843413472175598, 0.5465190410614014]
+yaw_positive applied_torque [-0.7409444451332092, 0.5401428937911987, -0.5843413472175598, 0.5465190410614014]
+yaw_positive contact_force_max 0.0
+yaw_positive mean_vx= -0.12330784648656845 mean_wz= 0.01155262254178524 mean_wheel= [0.10459816455841064, 0.7402817606925964, -0.3720817565917969, 1.0163793563842773] first_wheel= [-2.7947633266448975, 2.9726133346557617, -2.8523108959198, 2.959831953048706] last_wheel= [0.418572336435318, 0.38962113857269287, -0.29325389862060547, 1.0157444477081299] first_vx= -9.997913730330765e-05 last_vx= -0.08604530990123749
+yaw_negative post_reset_wheel_vel [0.0, 0.0, 0.0, 0.0]
+yaw_negative joint_vel_target [4.0, -4.0, 4.0, -4.0]
+yaw_negative computed_torque [0.6168333292007446, -0.7501623630523682, 0.44652488827705383, -0.5365408658981323]
+yaw_negative applied_torque [0.6168333292007446, -0.7501623630523682, 0.44652488827705383, -0.5365408658981323]
+yaw_negative contact_force_max 0.0
+yaw_negative mean_vx= -0.1400749385356903 mean_wz= -0.016054823994636536 mean_wheel= [0.7791315317153931, 0.14075934886932373, 0.9882297515869141, -0.694104015827179] first_wheel= [2.8597168922424316, -3.1049375534057617, 3.0759193897247314, -3.120483875274658] last_wheel= [0.07967840880155563, 0.5573206543922424, 1.1002674102783203, 0.31433409452438354] first_vx= 0.0032404493540525436 last_vx= -0.07874875515699387
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260817_222109.log
+2026-08-17T14:21:09Z [458ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-08-17T14:21:10Z [1,010ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-08-17T14:21:10Z [1,304ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 120368
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-17T14:21:14Z [5,038ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0

@@ -1,0 +1,269 @@
+[INFO][AppLauncher]: Using device: cuda
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+======Missing terms====== 
+[]
+ =======================
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-18_00-22-34.log[0m
+[36m======================================================================================[0m
+
+[33m00:22:34 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 1042
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 0.03333333333333333
+	Environment step-size : 0.03333333333333333
+[33m00:22:34 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 5.172246 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 6
+	Environment spacing   : 4.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.721167 seconds
+[33m00:22:42 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+[INFO] Command Manager:  <CommandManager> contains 2 active terms.
++---------------------------------------------+
+|             Active Command Terms            |
++-------+------------+------------------------+
+| Index | Name       |          Type          |
++-------+------------+------------------------+
+|   0   | locomotion | UniformVelocityCommand |
+|   1   | ee_goal    | EeSphericalGoalCommand |
++-------+------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++-----------+------------------------+
+|   Index   | Name                   |
++-----------+------------------------+
+|     0     | reset_root             |
+|     1     | reset_joints           |
+|     2     | init_priv              |
+|     3     | reset_rewards          |
++-----------+------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 3 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 16)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | leg_pos     |          12 |
+|   1    | wheel_vel   |           4 |
+|   2    | arm_ik      |           0 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++--------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (876,)) |
++----------------+-------------+-------------------+
+|     Index      | Name        |       Shape       |
++----------------+-------------+-------------------+
+|       0        | obs         |       (876,)      |
++----------------+-------------+-------------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 4 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | bad_contact |  False   |
+|   2   | tilt        |  False   |
+|   3   | low_height  |  False   |
++-------+-------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 43 active terms.
++---------------------------------------------------------+
+|                   Active Reward Terms                   |
++-------+--------------------------+----------------------+
+| Index | Name                     |               Weight |
++-------+--------------------------+----------------------+
+|   0   | term_bad_contact         |              -3000.0 |
+|   1   | term_tilt                |              -3000.0 |
+|   2   | term_low_height          |              -3000.0 |
+|   3   | leg_action_l2            |               -0.003 |
+|   4   | tracking_lin_vel         |                  0.6 |
+|   5   | tracking_lin_vel_x_exp   |                  1.5 |
+|   6   | tracking_ang_vel_yaw_l1  |                  0.0 |
+|   7   | tracking_ang_vel_yaw_exp |                  1.5 |
+|   8   | tracking_lin_vel_y_l2    |                  0.0 |
+|   9   | tracking_lin_vel_z_l2    |                  0.0 |
+|   10  | survive                  |                  0.0 |
+|   11  | foot_contacts_z          |                  0.0 |
+|   12  | torques                  |             -7.5e-06 |
+|   13  | tracking_lin_vel_y       |                  0.0 |
+|   14  | lin_vel_z                | -0.44999999999999996 |
+|   15  | ang_vel_xy               |                -0.06 |
+|   16  | tracking_ang_vel         |                  0.3 |
+|   17  | work                     |              -0.0009 |
+|   18  | dof_acc                  |            -2.25e-07 |
+|   19  | action_rate              |              -0.0045 |
+|   20  | dof_pos_limits           |                 -3.0 |
+|   21  | delta_torques            |               -3e-08 |
+|   22  | collision                |                 -3.0 |
+|   23  | walking_dof              |                 0.03 |
+|   24  | hip_pos                  |                -0.06 |
+|   25  | feet_jerk                |               -6e-05 |
+|   26  | alive                    |                  0.3 |
+|   27  | feet_drag                |               -0.024 |
+|   28  | feet_contact_forces      |              -0.0003 |
+|   29  | roll                     |                 -0.3 |
+|   30  | base_height              |                 -0.6 |
+|   31  | tracking_lin_vel_max     |  0.44999999999999996 |
+|   32  | flat_orientation_l2      |                 -0.6 |
+|   33  | air_time_variance        |                 -0.3 |
+|   34  | feet_height              |                  0.0 |
+|   35  | feet_air_time            |                0.015 |
+|   36  | update_last_buffers      |                  0.0 |
+|   37  | wheel_idle_speed         |              -0.0009 |
+|   38  | wheel_action_l2          |              -0.0003 |
+|   39  | wheel_action_rate        |              -0.0006 |
+|   40  | teacher_ensemble_match   |  0.22499999999999998 |
+|   41  | wheel_forward_use        |                 0.18 |
+|   42  | wheel_turn_support       |                0.135 |
++-------+--------------------------+----------------------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=876, out_features=256, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=256, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=16, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=876, out_features=256, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=256, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=1, bias=True)
+)
+DEBUG 0 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.5728069543838501 tilt 0.08804813772439957 wheel_target [0.3333333432674408, 0.3333333432674408, 0.3333333432674408, 0.3333333432674408] wheel_vel [0.4334048926830292, -7.234702206915244e-05, -0.00017241509340237826, -2.5436982468818314e-05] wheel_torque [-0.2576864957809448, 0.16685238480567932, 0.1669846624135971, 0.1666577160358429]
+DEBUG 10 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.48461824655532837 tilt 0.39412447810173035 wheel_target [3.048506021499634, 2.9384076595306396, 2.479041576385498, 2.3030240535736084] wheel_vel [0.44341084361076355, -5.638015136355534e-05, 0.16349032521247864, 0.06388239562511444] wheel_torque [1.4291653633117676, 1.4693244695663452, 0.9756784439086914, 1.1303000450134277]
+DEBUG 30 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.41372212767601013 tilt 0.394158273935318 wheel_target [2.911381721496582, 2.826566696166992, 2.437718152999878, 2.2887096405029297] wheel_vel [-0.05625879392027855, -8.062831329880282e-05, 0.13022279739379883, 0.30277183651924133] wheel_torque [1.483816146850586, 1.4133046865463257, 1.1610023975372314, 0.9981536269187927]
+DEBUG 60 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.412490576505661 tilt 0.31561997532844543 wheel_target [3.0834155082702637, 2.9908509254455566, 2.6404216289520264, 2.509629249572754] wheel_vel [0.09275150299072266, 0.2277209460735321, 0.08814838528633118, -0.09023240208625793] wheel_torque [1.5378433465957642, 1.3457450866699219, 1.280767798423767, 1.2951085567474365]
+DEBUG 120 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.39675256609916687 tilt 0.19820350408554077 wheel_target [3.2261393070220947, 3.1545512676239014, 2.8679397106170654, 2.7628440856933594] wheel_vel [0.11389757692813873, 0.42594194412231445, -0.004793254658579826, 0.09931030869483948] wheel_torque [1.5484967231750488, 1.3801263570785522, 1.4612473249435425, 1.3295683860778809]
+DEBUG 240 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.37040024995803833 tilt 0.10100699216127396 wheel_target [3.170842170715332, 3.168675661087036, 2.9432642459869385, 2.8550832271575928] wheel_vel [0.04019719362258911, 0.14293892681598663, 0.14055903255939484, 0.10063613951206207] wheel_torque [1.5646734237670898, 1.5191190242767334, 1.4110770225524902, 1.378009557723999]
+DEBUG 299 cmd [0.3499999940395355, 0.0, 0.0] root_z 0.5799999833106995 tilt 0.0 wheel_target [3.1233348846435547, 3.1303579807281494, 2.915020704269409, 2.8252182006835938] wheel_vel [0.0, 0.0, 0.0, 0.0] wheel_torque [1.5237196683883667, 1.602645754814148, 1.4544305801391602, 1.3794314861297607]
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.34134902954101565,
+      "mean_yaw_error_radps": 0.0660736338297526,
+      "mean_body_vx_mps": 0.01440240224202474,
+      "mean_body_wz_radps": 0.01358993371327718
+    },
+    "reverse": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.25131729125976565,
+      "mean_yaw_error_radps": 0.02985781669616699,
+      "mean_body_vx_mps": -0.01787637233734131,
+      "mean_body_wz_radps": -0.002602142890294393
+    },
+    "yaw_left": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.06399756749471029,
+      "mean_yaw_error_radps": 0.4451848856608073,
+      "mean_body_vx_mps": -0.0037457648913065593,
+      "mean_body_wz_radps": 0.005302773714065552
+    },
+    "yaw_right": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.04983745574951172,
+      "mean_yaw_error_radps": 0.4499718729654948,
+      "mean_body_vx_mps": 0.003330323100090027,
+      "mean_body_wz_radps": -2.817225952943166e-05
+    },
+    "forward_arc": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.25938613891601564,
+      "mean_yaw_error_radps": 0.3392469024658203,
+      "mean_body_vx_mps": 0.005350724061330159,
+      "mean_body_wz_radps": 0.024712285995483398
+    },
+    "stationary": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.050864006678263345,
+      "mean_yaw_error_radps": 0.04034921964009603,
+      "mean_body_vx_mps": -0.009288739363352458,
+      "mean_body_wz_radps": -0.005384705464045207
+    }
+  }
+}
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260818_002228.log
+2026-08-17T16:22:28Z [434ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-08-17T16:22:29Z [947ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-08-17T16:22:29Z [1,230ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 119652
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-17T16:22:33Z [4,694ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0
+2026-08-17T16:22:42Z [14,116ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.
+2026-08-17T16:22:42Z [14,116ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-08-17T16:22:42Z [14,116ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_goal.
+2026-08-17T16:22:42Z [14,116ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_goal_center.
+2026-08-17T16:22:42Z [14,116ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_current.

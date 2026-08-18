@@ -1,0 +1,2804 @@
+env:
+  viewer:
+    eye:
+    - 7.5
+    - 7.5
+    - 7.5
+    lookat:
+    - 0.0
+    - 0.0
+    - 0.0
+    cam_prim_path: /OmniverseKit_Persp
+    resolution:
+    - 1280
+    - 720
+    origin_type: world
+    env_index: 0
+    asset_name: null
+    body_name: null
+  sim:
+    physics_prim_path: /physicsScene
+    device: cuda:0
+    dt: 0.008333333333333333
+    render_interval: 4
+    gravity:
+    - 0.0
+    - 0.0
+    - -9.81
+    enable_scene_query_support: false
+    use_fabric: true
+    physx:
+      solver_type: 1
+      solve_articulation_contact_last: false
+      min_position_iteration_count: 1
+      max_position_iteration_count: 255
+      min_velocity_iteration_count: 0
+      max_velocity_iteration_count: 255
+      enable_ccd: false
+      enable_stabilization: false
+      enable_external_forces_every_iteration: false
+      enable_enhanced_determinism: false
+      bounce_threshold_velocity: 0.5
+      friction_offset_threshold: 0.04
+      friction_correlation_distance: 0.025
+      gpu_max_rigid_contact_count: 8388608
+      gpu_max_rigid_patch_count: 163840
+      gpu_found_lost_pairs_capacity: 2097152
+      gpu_found_lost_aggregate_pairs_capacity: 33554432
+      gpu_total_aggregate_pairs_capacity: 2097152
+      gpu_collision_stack_size: 67108864
+      gpu_heap_capacity: 67108864
+      gpu_temp_buffer_capacity: 16777216
+      gpu_max_num_partitions: 8
+      gpu_max_soft_body_contacts: 1048576
+      gpu_max_particle_contacts: 1048576
+    physics_material:
+      func: isaaclab.sim.spawners.materials.physics_materials:spawn_rigid_body_material
+      static_friction: 0.5
+      dynamic_friction: 0.5
+      restitution: 0.0
+      friction_combine_mode: average
+      restitution_combine_mode: average
+      compliant_contact_stiffness: 0.0
+      compliant_contact_damping: 0.0
+    render:
+      enable_translucency: null
+      enable_reflections: null
+      enable_global_illumination: null
+      antialiasing_mode: null
+      enable_dlssg: null
+      enable_dl_denoiser: null
+      dlss_mode: null
+      enable_direct_lighting: null
+      samples_per_pixel: null
+      enable_shadows: null
+      enable_ambient_occlusion: null
+      dome_light_upper_lower_strategy: null
+      carb_settings: null
+      rendering_mode: null
+    create_stage_in_memory: false
+    logging_level: WARNING
+    save_logs_to_file: true
+    log_dir: null
+  ui_window_class_type: isaaclab.envs.ui.manager_based_rl_env_window:ManagerBasedRLEnvWindow
+  seed: null
+  decimation: 4
+  scene:
+    num_envs: 1024
+    env_spacing: 4.0
+    lazy_sensor_update: true
+    replicate_physics: true
+    filter_collisions: true
+    clone_in_fabric: false
+    robot:
+      class_type: isaaclab.assets.articulation.articulation:Articulation
+      prim_path: '{ENV_REGEX_NS}/Robot'
+      spawn:
+        func: isaaclab.sim.spawners.from_files.from_files:spawn_from_usd
+        visible: true
+        semantic_tags: null
+        copy_from_source: true
+        mass_props: null
+        deformable_props: null
+        rigid_props:
+          rigid_body_enabled: null
+          kinematic_enabled: null
+          disable_gravity: false
+          linear_damping: 0.0
+          angular_damping: 0.0
+          max_linear_velocity: 1000.0
+          max_angular_velocity: 1000.0
+          max_depenetration_velocity: 1.0
+          max_contact_impulse: null
+          enable_gyroscopic_forces: null
+          retain_accelerations: false
+          solver_position_iteration_count: null
+          solver_velocity_iteration_count: null
+          sleep_threshold: null
+          stabilization_threshold: null
+        collision_props: null
+        activate_contact_sensors: true
+        scale: null
+        articulation_props:
+          articulation_enabled: null
+          enabled_self_collisions: true
+          solver_position_iteration_count: 8
+          solver_velocity_iteration_count: 4
+          sleep_threshold: null
+          stabilization_threshold: null
+          fix_root_link: null
+        fixed_tendons_props: null
+        spatial_tendons_props: null
+        joint_drive_props: null
+        visual_material_path: material
+        visual_material: null
+        usd_path: /root/gpufree-data/tandem_hrl_620d798/source/quadruped_arm/quadruped_arm/robots/assets/quadruped_arm_V3_tandem_inertia.usd
+        variants: null
+      init_state:
+        pos:
+        - 0.0
+        - 0.0
+        - 0.58
+        rot:
+        - 1.0
+        - 0.0
+        - 0.0
+        - 0.0
+        lin_vel:
+        - 0.0
+        - 0.0
+        - 0.0
+        ang_vel:
+        - 0.0
+        - 0.0
+        - 0.0
+        joint_pos:
+          .*R_hip_joint: -0.2
+          .*L_hip_joint: 0.2
+          F[L,R]_thigh_joint: 0.8
+          R[L,R]_thigh_joint: 1.0
+          .*_calf_joint: -1.5
+          .*_foot_wheel_joint: 0.0
+        joint_vel:
+          .*: 0.0
+      collision_group: 0
+      debug_vis: false
+      articulation_root_prim_path: null
+      soft_joint_pos_limit_factor: 1.0
+      actuators:
+        M107-24-2:
+          class_type: isaaclab.actuators.actuator_pd:IdealPDActuator
+          joint_names_expr:
+          - .*_hip_.*
+          - .*_thigh_.*
+          effort_limit: 200
+          velocity_limit: 23
+          effort_limit_sim: null
+          velocity_limit_sim: null
+          stiffness: 220.0
+          damping: 8.0
+          armature: null
+          friction: 0.01
+          dynamic_friction: null
+          viscous_friction: null
+        '2':
+          class_type: isaaclab.actuators.actuator_pd:IdealPDActuator
+          joint_names_expr:
+          - .*_calf_.*
+          effort_limit: 320
+          velocity_limit: 14
+          effort_limit_sim: null
+          velocity_limit_sim: null
+          stiffness: 220.0
+          damping: 8.0
+          armature: null
+          friction: 0.01
+          dynamic_friction: null
+          viscous_friction: null
+        wheels:
+          class_type: isaaclab.actuators.actuator_pd:ImplicitActuator
+          joint_names_expr:
+          - .*_foot_wheel_joint
+          effort_limit: null
+          velocity_limit: null
+          effort_limit_sim: 23.5
+          velocity_limit_sim: 30.0
+          stiffness: 0.0
+          damping: 0.5
+          armature: null
+          friction: 0.01
+          dynamic_friction: null
+          viscous_friction: null
+        arm_proximal:
+          class_type: isaaclab.actuators.actuator_pd:ImplicitActuator
+          joint_names_expr:
+          - ^joint[1-3]$
+          effort_limit: null
+          velocity_limit: null
+          effort_limit_sim: 720.0
+          velocity_limit_sim: 2.175
+          stiffness: 1000.0
+          damping: 80.0
+          armature: null
+          friction: null
+          dynamic_friction: null
+          viscous_friction: null
+        arm_distal:
+          class_type: isaaclab.actuators.actuator_pd:ImplicitActuator
+          joint_names_expr:
+          - ^joint[4-6]$
+          effort_limit: null
+          velocity_limit: null
+          effort_limit_sim: 720.0
+          velocity_limit_sim: 2.61
+          stiffness: 1000.0
+          damping: 80.0
+          armature: null
+          friction: null
+          dynamic_friction: null
+          viscous_friction: null
+        gripper:
+          class_type: isaaclab.actuators.actuator_pd:ImplicitActuator
+          joint_names_expr:
+          - ^joint[78]$
+          effort_limit: null
+          velocity_limit: null
+          effort_limit_sim: 1650.0
+          velocity_limit_sim: 10.0
+          stiffness: 17
+          damping: 0.02
+          armature: null
+          friction: null
+          dynamic_friction: null
+          viscous_friction: null
+      actuator_value_resolution_debug_print: false
+    terrain:
+      class_type: isaaclab.terrains.terrain_importer:TerrainImporter
+      collision_group: -1
+      prim_path: /World/ground
+      num_envs: 1
+      terrain_type: plane
+      terrain_generator: null
+      usd_path: null
+      env_spacing: null
+      use_terrain_origins: true
+      visual_material:
+        func: isaaclab.sim.spawners.materials.visual_materials:spawn_from_mdl_file
+        mdl_path: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Materials/TilesMarbleSpiderWhiteBrickBondHoned/TilesMarbleSpiderWhiteBrickBondHoned.mdl
+        project_uvw: true
+        albedo_brightness: null
+        texture_scale:
+        - 0.25
+        - 0.25
+      physics_material:
+        func: isaaclab.sim.spawners.materials.physics_materials:spawn_rigid_body_material
+        static_friction: 1.0
+        dynamic_friction: 1.0
+        restitution: 0.0
+        friction_combine_mode: average
+        restitution_combine_mode: average
+        compliant_contact_stiffness: 0.0
+        compliant_contact_damping: 0.0
+      max_init_terrain_level: null
+      debug_vis: false
+    height_scanner:
+      class_type: isaaclab.sensors.ray_caster.ray_caster:RayCaster
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 0
+      debug_vis: false
+      mesh_prim_paths:
+      - /World/ground
+      offset:
+        pos:
+        - 0.0
+        - 0.0
+        - 20.0
+        rot:
+        - 1.0
+        - 0.0
+        - 0.0
+        - 0.0
+      attach_yaw_only: null
+      ray_alignment: yaw
+      pattern_cfg:
+        func: isaaclab.sensors.ray_caster.patterns.patterns:grid_pattern
+        resolution: 0.1
+        size:
+        - 1.6
+        - 1.0
+        direction:
+        - 0.0
+        - 0.0
+        - -1.0
+        ordering: xy
+      max_distance: 1000000.0
+      drift_range:
+      - 0.0
+      - 0.0
+      ray_cast_drift_range:
+        x:
+        - 0.0
+        - 0.0
+        'y':
+        - 0.0
+        - 0.0
+        z:
+        - 0.0
+        - 0.0
+      visualizer_cfg:
+        prim_path: /Visuals/RayCaster
+        markers:
+          hit:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    contact_forces:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/.*'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    base_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    trunk_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    head_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FL_hip_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FR_hip_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RL_hip_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RR_hip_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FL_thigh_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FR_thigh_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RL_thigh_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RR_thigh_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FL_calf_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FR_calf_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RL_calf_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RR_calf_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/base'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FL_foot_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/FL_foot'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    FR_foot_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/FR_foot'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RL_foot_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/RL_foot'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    RR_foot_contact:
+      class_type: isaaclab.sensors.contact_sensor.contact_sensor:ContactSensor
+      prim_path: '{ENV_REGEX_NS}/Robot/RR_foot'
+      update_period: 0.0
+      history_length: 3
+      debug_vis: false
+      track_pose: false
+      track_contact_points: false
+      track_friction_forces: false
+      max_contact_data_count_per_prim: 4
+      track_air_time: true
+      force_threshold: 1.0
+      filter_prim_paths_expr:
+      - /World/ground/terrain/GroundPlane/CollisionPlane
+      visualizer_cfg:
+        prim_path: /Visuals/ContactSensor
+        markers:
+          contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 1.0
+              - 0.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+          no_contact:
+            func: isaaclab.sim.spawners.shapes.shapes:spawn_sphere
+            visible: false
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            physics_material_path: material
+            physics_material: null
+            radius: 0.02
+    sky_light:
+      class_type: null
+      prim_path: /World/skyLight
+      spawn:
+        func: isaaclab.sim.spawners.lights.lights:spawn_light
+        visible: true
+        semantic_tags: null
+        copy_from_source: true
+        prim_type: DomeLight
+        color:
+        - 1.0
+        - 1.0
+        - 1.0
+        enable_color_temperature: false
+        color_temperature: 6500.0
+        normalize: false
+        exposure: 0.0
+        intensity: 750.0
+        texture_file: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr
+        texture_format: automatic
+        visible_in_primary_ray: true
+      init_state:
+        pos:
+        - 0.0
+        - 0.0
+        - 0.0
+        rot:
+        - 1.0
+        - 0.0
+        - 0.0
+        - 0.0
+      collision_group: 0
+      debug_vis: false
+  recorders:
+    dataset_file_handler_class_type: isaaclab.utils.datasets.hdf5_dataset_file_handler:HDF5DatasetFileHandler
+    dataset_export_dir_path: /tmp/isaaclab/logs
+    dataset_filename: dataset
+    dataset_export_mode:
+      _value_: 1
+      _name_: EXPORT_ALL
+      _sort_order_: 1
+    export_in_record_pre_reset: true
+    export_in_close: false
+  observations:
+    policy:
+      concatenate_terms: true
+      concatenate_dim: -1
+      enable_corruption: false
+      history_length: null
+      flatten_history_dim: true
+      obs:
+        func: quadruped_arm.tasks.manager_based.maniploco.mdp.observations:VbcPolicyObsTerm
+        params:
+          asset_name: robot
+          obs_joint_names:
+          - FR_hip_joint
+          - FR_thigh_joint
+          - FR_calf_joint
+          - FL_hip_joint
+          - FL_thigh_joint
+          - FL_calf_joint
+          - RR_hip_joint
+          - RR_thigh_joint
+          - RR_calf_joint
+          - RL_hip_joint
+          - RL_thigh_joint
+          - RL_calf_joint
+          - FL_foot_wheel_joint
+          - FR_foot_wheel_joint
+          - RL_foot_wheel_joint
+          - RR_foot_wheel_joint
+          - joint1
+          - joint2
+          - joint3
+          - joint4
+          - joint5
+          - joint6
+          contact_body_names:
+          - FL_foot
+          - FR_foot
+          - RL_foot
+          - RR_foot
+          history_len: 10
+          use_priv: true
+          arm_base_offset:
+          - -0.3
+          - 0.0
+          - 0.09
+        modifiers: null
+        noise: null
+        clip: null
+        scale: null
+        history_length: 0
+        flatten_history_dim: true
+  actions:
+    leg_pos:
+      class_type: quadruped_arm.tasks.manager_based.maniploco.mdp.stabilized_leg_action:StabilizedLegPositionAction
+      asset_name: robot
+      debug_vis: false
+      clip: null
+      joint_names:
+      - FR_hip_joint
+      - FR_thigh_joint
+      - FR_calf_joint
+      - FL_hip_joint
+      - FL_thigh_joint
+      - FL_calf_joint
+      - RR_hip_joint
+      - RR_thigh_joint
+      - RR_calf_joint
+      - RL_hip_joint
+      - RL_thigh_joint
+      - RL_calf_joint
+      scale:
+        .*_hip_.*: 0.4
+        .*_thigh_.*: 0.45
+        .*_calf_.*: 0.45
+      offset: 0.0
+      preserve_order: true
+      use_default_offset: true
+      contact_sensor_name: contact_forces
+      foot_body_names:
+      - FL_foot
+      - FR_foot
+      - RL_foot
+      - RR_foot
+      foot_leg_joint_names:
+      - - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+      - - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+      - - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+      - - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+      max_policy_residual: 0.0
+      posture_feedback_enabled: false
+      posture_feedback_authority: 0.75
+      contact_force_threshold: 1.5
+      base_height_target: 0.46
+      base_height_gain: 1.4
+      base_vertical_damping: 0.3
+      orientation_gain: 1.8
+      angular_velocity_damping: 0.35
+      max_vertical_recovery_velocity: 0.12
+      max_angular_recovery_velocity: 0.4
+      posture_feedback_horizon: 0.1
+      posture_feedback_damping: 0.05
+      posture_feedback_joint_limit: 0.1
+      joint_limit_margin: 0.02
+      safety_gate_enabled: true
+      safety_tilt_soft_limit: 0.16
+      safety_tilt_gate_width: 0.04
+      safety_min_height: 0.3
+      safety_height_gate_width: 0.04
+      turn_coordination_enabled: false
+      turn_command_name: locomotion
+      turn_max_vx: 0.25
+      turn_max_wz: 0.1
+      turn_coord_joint_names: []
+      turn_coord_joint_weights: []
+      turn_hip_offset_gain: 0.0
+      turn_hip_offset_limit: 0.08
+      turn_hip_offset_sign: 1.0
+      turn_signal_smoothing: 0.2
+      turn_stiffness_enabled: false
+      turn_stiffness_min_factor: 0.75
+      turn_stiffness_smoothing: 0.2
+      turn_load_balance_enabled: false
+      turn_load_balance_gain: 0.12
+      turn_load_balance_limit: 0.05
+      turn_load_balance_smoothing: 0.12
+      turn_load_balance_min_total_force: 40.0
+    wheel_vel:
+      class_type: quadruped_arm.tasks.manager_based.maniploco.mdp.safe_wheel_torque_action:SafeDifferentialWheelTorqueAction
+      asset_name: robot
+      debug_vis: false
+      clip: null
+      joint_names:
+      - FL_foot_wheel_joint
+      - FR_foot_wheel_joint
+      - RL_foot_wheel_joint
+      - RR_foot_wheel_joint
+      scale: 1.0
+      offset: 0.0
+      preserve_order: true
+      command_name: locomotion
+      wheel_radius: 0.11
+      track_width: 0.4693
+      wheel_dir_signs:
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      max_ref_vx: 0.25
+      max_ref_wz: 0.1
+      vx_feedback_gain: 0.15
+      wz_feedback_gain: 1.0
+      wheel_velocity_kp: 3.0
+      yaw_torque_gain: 24.0
+      torque_limit: 8.0
+      residual_scale: 0.1
+      max_torque_rate: 100.0
+      min_height: 0.24
+      height_gate_width: 0.045
+      tilt_gate_gain: 1.5
+    arm_ik:
+      class_type: quadruped_arm.tasks.manager_based.maniploco.mdp.actions:ArmIkFromEeGoalAction
+      asset_name: robot
+      debug_vis: false
+      clip: null
+      command_name: ee_goal
+      ee_body_name: link6
+      arm_joint_names:
+      - joint1
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+      - joint6
+      damping: 0.5
+      max_joint_delta: 0.0
+      ee_tcp_offset:
+      - 0.0
+      - 0.0
+      - 0.13
+      ee_tcp_quat_offset:
+      - 1.0
+      - 0.0
+      - 0.0
+      - 0.0
+      orientation_weight: 0.2
+  events:
+    reset_root:
+      func: isaaclab.envs.mdp.events:reset_root_state_uniform
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        pose_range:
+          x:
+          - -0.5
+          - 0.5
+          'y':
+          - -0.5
+          - 0.5
+          yaw:
+          - -3.141592653589793
+          - 3.141592653589793
+        velocity_range:
+          x:
+          - 0.0
+          - 0.0
+          'y':
+          - 0.0
+          - 0.0
+          z:
+          - 0.0
+          - 0.0
+          roll:
+          - 0.0
+          - 0.0
+          pitch:
+          - 0.0
+          - 0.0
+          yaw:
+          - 0.0
+          - 0.0
+      mode: reset
+      interval_range_s: null
+      is_global_time: false
+      min_step_count_between_reset: 0
+    reset_joints:
+      func: isaaclab.envs.mdp.events:reset_joints_by_offset
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        position_range:
+        - -0.02
+        - 0.02
+        velocity_range:
+        - 0.0
+        - 0.0
+      mode: reset
+      interval_range_s: null
+      is_global_time: false
+      min_step_count_between_reset: 0
+    init_priv:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.events:set_vbc_priv_buf
+      params:
+        dim: 18
+      mode: reset
+      interval_range_s: null
+      is_global_time: false
+      min_step_count_between_reset: 0
+    reset_rewards:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.events:reset_reward_buffers
+      params:
+        feet_count: 4
+      mode: reset
+      interval_range_s: null
+      is_global_time: false
+      min_step_count_between_reset: 0
+  rerender_on_reset: false
+  num_rerenders_on_reset: 0
+  wait_for_textures: true
+  xr: null
+  teleop_devices:
+    devices: {}
+  export_io_descriptors: false
+  log_dir: null
+  is_finite_horizon: false
+  episode_length_s: 10.0
+  rewards:
+    term_bad_contact:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:penalty_bad_contact
+      params:
+        sensor_names:
+        - FL_hip_contact
+        - FR_hip_contact
+        - RL_hip_contact
+        - RR_hip_contact
+        - FL_thigh_contact
+        - FR_thigh_contact
+        - RL_thigh_contact
+        - RR_thigh_contact
+        - FL_calf_contact
+        - FR_calf_contact
+        - RL_calf_contact
+        - RR_calf_contact
+        - head_contact
+        - base_contact
+        - trunk_contact
+        thresh: 10.0
+      weight: -3000.0
+    term_tilt:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:penalty_tilt
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        limit: 0.6
+      weight: -3000.0
+    term_low_height:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:penalty_low_height
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        z_min: 0.22
+      weight: -3000.0
+    tracking_ee_sphere: null
+    tracking_ee_world: null
+    tracking_ee_sphere_walking: null
+    tracking_ee_sphere_standing: null
+    tracking_ee_cart: null
+    tracking_ee_orn: null
+    tracking_ee_orn_ry: null
+    arm_energy_abs_sum: null
+    hip_action_l2: null
+    leg_energy_abs_sum: null
+    leg_energy_sum_abs: null
+    leg_action_l2:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:leg_action_l2
+      params:
+        leg_action_dim: 12
+      weight: -0.003
+    leg_energy: null
+    tracking_lin_vel:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel
+      params: {}
+      weight: 0.6
+    tracking_lin_vel_x_l1: null
+    tracking_lin_vel_x_exp:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel_x_exp
+      params:
+        tracking_sigma: 0.2
+      weight: 1.5
+    tracking_ang_vel_yaw_l1:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_ang_vel_yaw_l1
+      params: {}
+      weight: 0.0
+    tracking_ang_vel_yaw_exp:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_ang_vel_yaw_exp
+      params:
+        tracking_sigma: 0.2
+      weight: 1.5
+    tracking_lin_vel_y_l2:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel_y_l2
+      params: {}
+      weight: 0.0
+    tracking_lin_vel_z_l2:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel_z_l2
+      params: {}
+      weight: 0.0
+    survive:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:survive
+      params: {}
+      weight: 0.0
+    foot_contacts_z:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:foot_contacts_z
+      params:
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: 0.0
+    torques:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:torques
+      params:
+        asset_name: robot
+        joint_names:
+        - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+        - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+        - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+        - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+      weight: -7.5e-06
+    energy_square: null
+    tracking_lin_vel_y:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel_y
+      params:
+        tracking_sigma: 0.2
+      weight: 0.0
+    lin_vel_z:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:lin_vel_z
+      params: {}
+      weight: -0.44999999999999996
+    ang_vel_xy:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:ang_vel_xy
+      params: {}
+      weight: -0.06
+    tracking_ang_vel:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_ang_vel
+      params:
+        tracking_sigma: 0.2
+      weight: 0.3
+    work:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:work
+      params:
+        asset_name: robot
+        joint_names:
+        - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+        - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+        - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+        - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+      weight: -0.0009
+    dof_acc:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:dof_acc
+      params:
+        asset_name: robot
+        joint_names:
+        - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+        - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+        - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+        - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+      weight: -2.25e-07
+    action_rate:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:action_rate
+      params:
+        action_dim: 16
+      weight: -0.0045
+    dof_pos_limits:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:dof_pos_limits
+      params:
+        asset_cfg:
+          name: robot
+          joint_names:
+          - FR_hip_joint
+          - FR_thigh_joint
+          - FR_calf_joint
+          - FL_hip_joint
+          - FL_thigh_joint
+          - FL_calf_joint
+          - RR_hip_joint
+          - RR_thigh_joint
+          - RR_calf_joint
+          - RL_hip_joint
+          - RL_thigh_joint
+          - RL_calf_joint
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: true
+      weight: -3.0
+    delta_torques:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:delta_torques
+      params:
+        asset_name: robot
+        joint_names:
+        - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+        - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+        - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+        - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+      weight: -3.0e-08
+    collision:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:collision
+      params:
+        sensor_name: contact_forces
+        asset_name: robot
+        penalize_tokens:
+        - thigh
+        - calf
+        - trunk
+      weight: -3.0
+    stand_still: null
+    walking_dof:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:walking_dof
+      params:
+        asset_name: robot
+        joint_names:
+        - FR_hip_joint
+        - FR_thigh_joint
+        - FR_calf_joint
+        - FL_hip_joint
+        - FL_thigh_joint
+        - FL_calf_joint
+        - RR_hip_joint
+        - RR_thigh_joint
+        - RR_calf_joint
+        - RL_hip_joint
+        - RL_thigh_joint
+        - RL_calf_joint
+      weight: 0.03
+    hip_pos:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:hip_pos
+      params:
+        asset_name: robot
+      weight: -0.06
+    feet_jerk:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:feet_jerk
+      params:
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: -6.0e-05
+    alive:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:alive
+      params: {}
+      weight: 0.3
+    feet_drag:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:feet_drag
+      params:
+        asset_name: robot
+        feet_body_names:
+        - FL_foot
+        - FR_foot
+        - RL_foot
+        - RR_foot
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: -0.024
+    feet_contact_forces:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:feet_contact_forces
+      params:
+        max_contact_force: 40.0
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: -0.0003
+    orientation: null
+    roll:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:roll
+      params:
+        asset_name: robot
+      weight: -0.3
+    base_height:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:base_height
+      params:
+        asset_name: robot
+        base_height_target: 0.46
+      weight: -0.6
+    orientation_walking: null
+    orientation_standing: null
+    torques_walking: null
+    torques_standing: null
+    energy_square_walking: null
+    energy_square_standing: null
+    base_height_walking: null
+    base_height_standing: null
+    dof_default_pos: null
+    dof_error: null
+    tracking_lin_vel_max:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:tracking_lin_vel_max
+      params:
+        vx_clip: 0.2
+      weight: 0.44999999999999996
+    penalty_lin_vel_y: null
+    flat_orientation_l2:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:flat_orientation_l2
+      params:
+        asset_name: robot
+      weight: -0.6
+    air_time_variance:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:air_time_variance_penalty_from_sensors
+      params:
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: -0.3
+    tracking_contacts_shaped_force: null
+    tracking_contacts_shaped_vel: null
+    feet_height:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:feet_height
+      params:
+        asset_name: robot
+        feet_body_names:
+        - FL_foot
+        - FR_foot
+        - RL_foot
+        - RR_foot
+        allfeet: true
+      weight: 0.0
+    feet_air_time:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:feet_air_time
+      params:
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+        allfeet: true
+      weight: 0.015
+    update_last_buffers:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:update_last_buffers
+      params:
+        sensor_names:
+        - FL_foot_contact
+        - FR_foot_contact
+        - RL_foot_contact
+        - RR_foot_contact
+      weight: 0.0
+    wheel_idle_speed:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:wheel_idle_speed
+      params:
+        asset_name: robot
+        wheel_joint_names:
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+        vx_clip: 0.2
+        wz_clip: 0.5
+      weight: -0.0009
+    wheel_action_l2:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:wheel_action_l2
+      params:
+        wheel_action_slice:
+        - 12
+        - 16
+      weight: -0.0003
+    wheel_action_rate:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:wheel_action_rate
+      params:
+        wheel_action_slice:
+        - 12
+        - 16
+      weight: -0.0006
+    teacher_ensemble_match:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:teacher_ensemble_match
+      params:
+        sigma: 0.2
+      weight: 0.0
+    wheel_forward_use:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:wheel_forward_use
+      params:
+        asset_name: robot
+        wheel_joint_names:
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+        wheel_radius: 0.11
+        wheel_dir_signs:
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        tracking_sigma: 0.2
+        vx_clip: 0.2
+        wz_small: 0.1
+        use_yaw_alignment_gate: true
+        yaw_gate_sigma: 0.2
+      weight: 0.18
+    wheel_turn_support:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.rewards_term:wheel_turn_support
+      params:
+        asset_name: robot
+        wheel_joint_names:
+        - FL_foot_wheel_joint
+        - FR_foot_wheel_joint
+        - RL_foot_wheel_joint
+        - RR_foot_wheel_joint
+        wheel_radius: 0.11
+        track_width: 0.4693
+        wheel_dir_signs:
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        tracking_sigma: 0.2
+        wz_clip: 0.03
+        wz_sign: 1.0
+      weight: 0.135
+  terminations:
+    time_out:
+      func: isaaclab.envs.mdp.terminations:time_out
+      params: {}
+      time_out: true
+    bad_contact:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.terminations:bad_contacts
+      params:
+        sensor_names:
+        - head_contact
+        - base_contact
+        - trunk_contact
+        thresh: 10.0
+      time_out: false
+    tilt:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.terminations:base_tilt
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        limit: 0.6
+      time_out: false
+    low_height:
+      func: quadruped_arm.tasks.manager_based.maniploco.mdp.terminations:base_height_low
+      params:
+        asset_cfg:
+          name: robot
+          joint_names: null
+          joint_ids: slice(None,None,None)
+          fixed_tendon_names: null
+          fixed_tendon_ids: slice(None,None,None)
+          body_names: null
+          body_ids: slice(None,None,None)
+          object_collection_names: null
+          object_collection_ids: slice(None,None,None)
+          preserve_order: false
+        z_min: 0.2
+      time_out: false
+  curriculum: null
+  commands:
+    locomotion:
+      class_type: isaaclab.envs.mdp.commands.velocity_command:UniformVelocityCommand
+      resampling_time_range:
+      - 4.0
+      - 6.0
+      debug_vis: true
+      asset_name: robot
+      heading_command: false
+      heading_control_stiffness: 1.0
+      rel_standing_envs: 0.0
+      rel_heading_envs: 0.0
+      ranges:
+        lin_vel_x:
+        - -0.25
+        - 0.25
+        lin_vel_y:
+        - 0.0
+        - 0.0
+        ang_vel_z:
+        - -0.1
+        - 0.1
+        heading:
+        - -3.141592653589793
+        - 3.141592653589793
+      goal_vel_visualizer_cfg:
+        prim_path: /Visuals/Command/velocity_goal
+        markers:
+          arrow:
+            func: isaaclab.sim.spawners.from_files.from_files:spawn_from_usd
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            deformable_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            scale:
+            - 0.5
+            - 0.5
+            - 0.5
+            articulation_props: null
+            fixed_tendons_props: null
+            spatial_tendons_props: null
+            joint_drive_props: null
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 1.0
+              - 0.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            usd_path: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Props/UIElements/arrow_x.usd
+            variants: null
+      current_vel_visualizer_cfg:
+        prim_path: /Visuals/Command/velocity_current
+        markers:
+          arrow:
+            func: isaaclab.sim.spawners.from_files.from_files:spawn_from_usd
+            visible: true
+            semantic_tags: null
+            copy_from_source: true
+            mass_props: null
+            deformable_props: null
+            rigid_props: null
+            collision_props: null
+            activate_contact_sensors: false
+            scale:
+            - 0.5
+            - 0.5
+            - 0.5
+            articulation_props: null
+            fixed_tendons_props: null
+            spatial_tendons_props: null
+            joint_drive_props: null
+            visual_material_path: material
+            visual_material:
+              func: isaaclab.sim.spawners.materials.visual_materials:spawn_preview_surface
+              diffuse_color:
+              - 0.0
+              - 0.0
+              - 1.0
+              emissive_color:
+              - 0.0
+              - 0.0
+              - 0.0
+              roughness: 0.5
+              metallic: 0.0
+              opacity: 1.0
+            usd_path: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Props/UIElements/arrow_x.usd
+            variants: null
+    ee_goal:
+      class_type: quadruped_arm.tasks.manager_based.maniploco.mdp.commands:EeSphericalGoalCommand
+      resampling_time_range:
+      - 1.0
+      - 5.0
+      debug_vis: true
+      asset_name: robot
+      traj_time:
+      - 1.0
+      - 3.0
+      hold_time:
+      - 0.5
+      - 2.0
+      pos_l:
+      - 0.5
+      - 0.7
+      pos_p:
+      - -0.7853981633974483
+      - 0.0
+      pos_y:
+      - -1.2
+      - 1.2
+      sphere_center_base:
+      - -0.215
+      - 0.0
+      - 0.7
+      delta_orn_r:
+      - -0.2617993877991494
+      - 0.2617993877991494
+      delta_orn_p:
+      - -0.2617993877991494
+      - 0.2617993877991494
+      delta_orn_y:
+      - -0.2617993877991494
+      - 0.2617993877991494
+      init_pos_start:
+      - 0.5
+      - 0.39269908169872414
+      - 0.0
+      init_pos_end:
+      - 0.4
+      - 0.0
+      - 0.0
+      collision_upper_limits:
+      - 0.1
+      - 0.2
+      - -0.05
+      collision_lower_limits:
+      - -0.8
+      - -0.2
+      - -0.7
+      underground_limit: -0.7
+      num_collision_check_samples: 10
+      max_resample_attempts: 10
+      debug_ee_body_name: link6
+      frame_yaw_offset: 3.141592653589793
+      debug_tcp_offset:
+      - 0.0
+      - 0.0
+      - 0.13
+      debug_tcp_quat_offset:
+      - 1.0
+      - 0.0
+      - 0.0
+      - 0.0
+      goal_roll_about_tool_z: -3.141592653589793
+agent:
+  seed: 42
+  device: cuda:0
+  num_steps_per_env: 24
+  max_iterations: 45000
+  empirical_normalization: null
+  obs_groups:
+    policy:
+    - policy
+    critic:
+    - policy
+  clip_actions: 100.0
+  save_interval: 200
+  experiment_name: maniploco
+  run_name: ''
+  logger: tensorboard
+  neptune_project: isaaclab
+  wandb_project: isaaclab
+  resume: false
+  load_run: .*
+  load_checkpoint: model_.*.pt
+  class_name: OnPolicyRunner
+  policy:
+    class_name: ActorCritic
+    init_noise_std: 0.6
+    noise_std_type: scalar
+    state_dependent_std: false
+    actor_obs_normalization: true
+    critic_obs_normalization: false
+    actor_hidden_dims:
+    - 256
+    - 128
+    critic_hidden_dims:
+    - 256
+    - 128
+    activation: elu
+  algorithm:
+    class_name: PPO
+    num_learning_epochs: 5
+    num_mini_batches: 4
+    learning_rate: 0.0001
+    schedule: fixed
+    gamma: 0.99
+    lam: 0.95
+    entropy_coef: 0.005
+    desired_kl: 0.01
+    max_grad_norm: 1.0
+    value_loss_coef: 1.0
+    use_clipped_value_loss: true
+    clip_param: 0.2
+    normalize_advantage_per_mini_batch: false
+    rnd_cfg: null
+    symmetry_cfg: null

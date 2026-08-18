@@ -1,0 +1,34 @@
+{
+  "checkpoint": "/root/gpufree-data/legacy_zyb_check/policy.pt",
+  "task": "ZYB-v0",
+  "num_envs": 4,
+  "num_steps": 120,
+  "command": [
+    0.35,
+    0.0,
+    0.0
+  ],
+  "layout": "common_scaled",
+  "clip_actions": null,
+  "policy_input_shape": [
+    4,
+    57
+  ],
+  "policy_output_shape": [
+    4,
+    16
+  ],
+  "action_dim": 16,
+  "tilt_envs": 0,
+  "low_height_envs": 0,
+  "bad_contact_envs": 0,
+  "envs_with_done": 0,
+  "max_tilt_mean_rad": 0.2624477446079254,
+  "max_tilt_max_rad": 0.2741294801235199,
+  "min_height_mean_m": 0.30401068925857544,
+  "min_height_min_m": 0.2831842005252838,
+  "mean_body_vx_mps": 0.04262109845876694,
+  "mean_body_wz_radps": 0.036560527980327606,
+  "action_abs_mean": 4.252618312835693,
+  "action_abs_max": 16.4981632232666
+}

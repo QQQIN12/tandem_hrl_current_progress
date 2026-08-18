@@ -1,0 +1,40 @@
+{
+  "gate": "velocity-conditioned learned locomotion Skill",
+  "counts_as_final_hrl_training": false,
+  "seed": 42,
+  "num_envs": 8,
+  "max_iterations": 1,
+  "resume_checkpoint": null,
+  "load_optimizer": false,
+  "action_dim": 20,
+  "history_length": 1,
+  "leg_residual_limit_rad": 0.0,
+  "wheel_action": "independent_support",
+  "wheel_policy_limit": 100.0,
+  "wheel_slew_per_step": 100.0,
+  "executor": "payload-aware support WBC",
+  "support_gain": 0.55,
+  "support_xy_tracking_scale": 1.0,
+  "max_learned_unload_shift_m": 0.0,
+  "max_learned_support_relaxation": 0.0,
+  "max_learned_unload_joint_correction": 0.14,
+  "reset_support_output": false,
+  "contact_observation": "binary contact plus 0.20 relative-load residual",
+  "yaw_load_transfer_target_effective_support": 3.0,
+  "command_fractions": {
+    "stationary": 0.1,
+    "yaw_only": 0.3,
+    "straight": 0.3,
+    "arc": 0.30000000000000004
+  },
+  "reward_weights": {
+    "yaw_tracking": 4.0,
+    "command_alignment": 1.5,
+    "yaw_load_transfer": 2.0,
+    "action_rate": -0.0045
+  },
+  "policy_hidden_dims": [
+    256,
+    128
+  ]
+}

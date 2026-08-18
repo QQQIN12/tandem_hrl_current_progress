@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/tandem_hrl_620d798/logs/rsl_rl/maniploco/2026-08-17_20-58-03/model_1122.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.3609627215067545,
+      "mean_yaw_error_radps": 0.06327677488327027,
+      "mean_body_vx_mps": -0.0030004387100537626,
+      "mean_body_wz_radps": 0.009380870883663496
+    },
+    "reverse": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.26266836166381835,
+      "mean_yaw_error_radps": 0.05850073258082072,
+      "mean_body_vx_mps": 0.0003703036407629646,
+      "mean_body_wz_radps": -0.006572792331377665
+    },
+    "yaw_left": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.07907483418782553,
+      "mean_yaw_error_radps": 0.46557399749755857,
+      "mean_body_vx_mps": 0.0015110777815183006,
+      "mean_body_wz_radps": 0.007672269741694133
+    },
+    "yaw_right": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.04773626168568929,
+      "mean_yaw_error_radps": 0.4456768163045247,
+      "mean_body_vx_mps": 0.0006797407443324725,
+      "mean_body_wz_radps": -0.005499059756596883
+    },
+    "forward_arc": {
+      "episodes": 4,
+      "stable_rate": 0.75,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2873988803227743,
+      "mean_yaw_error_radps": 0.46076298236846924,
+      "mean_body_vx_mps": 0.041144575940238105,
+      "mean_body_wz_radps": 0.19755271355311074
+    },
+    "stationary": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.06059246778488159,
+      "mean_yaw_error_radps": 0.06589874903361002,
+      "mean_body_vx_mps": -0.008914568622907001,
+      "mean_body_wz_radps": -4.439257085323326e-05
+    }
+  }
+}

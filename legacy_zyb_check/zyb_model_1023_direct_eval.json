@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.36442933400472005,
+      "mean_yaw_error_radps": 0.054585871696472166,
+      "mean_body_vx_mps": -0.00724768136938413,
+      "mean_body_wz_radps": 0.009539632598559061
+    },
+    "reverse": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2650440851847331,
+      "mean_yaw_error_radps": 0.0567450737953186,
+      "mean_body_vx_mps": 0.0009869281450907387,
+      "mean_body_wz_radps": -0.0003319095571835836
+    },
+    "yaw_left": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.08560588359832763,
+      "mean_yaw_error_radps": 0.441906312306722,
+      "mean_body_vx_mps": 0.0018665516128142676,
+      "mean_body_wz_radps": 0.017262071569760642
+    },
+    "yaw_right": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.058139039675394695,
+      "mean_yaw_error_radps": 0.4518424733479818,
+      "mean_body_vx_mps": 0.0016804954906304678,
+      "mean_body_wz_radps": -0.003037084738413493
+    },
+    "forward_arc": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.26133304595947265,
+      "mean_yaw_error_radps": 0.3557942199707031,
+      "mean_body_vx_mps": 0.0002491185565789541,
+      "mean_body_wz_radps": 0.0024249983827273054
+    },
+    "stationary": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.06883673747380574,
+      "mean_yaw_error_radps": 0.07450553099314372,
+      "mean_body_vx_mps": -0.001557467579841614,
+      "mean_body_wz_radps": 0.0008628895878791808
+    }
+  }
+}

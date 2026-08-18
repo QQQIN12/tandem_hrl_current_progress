@@ -1,0 +1,199 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+======Missing terms====== 
+[]
+ =======================
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-18_04-35-16.log[0m
+[36m======================================================================================[0m
+
+[33m04:35:16 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 271828
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 833.3333333333334
+	Environment step-size : 0.03333333333333333
+[33m04:35:16 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 1.742468 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 1
+	Environment spacing   : 4.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 0.769278 seconds
+[33m04:35:18 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+[INFO] Command Manager:  <CommandManager> contains 2 active terms.
++---------------------------------------------+
+|             Active Command Terms            |
++-------+------------+------------------------+
+| Index | Name       |          Type          |
++-------+------------+------------------------+
+|   0   | locomotion | UniformVelocityCommand |
+|   1   | ee_goal    | EeSphericalGoalCommand |
++-------+------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++-----------+------------------------+
+|   Index   | Name                   |
++-----------+------------------------+
+|     0     | reset_root             |
+|     1     | reset_joints           |
+|     2     | init_priv              |
+|     3     | reset_rewards          |
++-----------+------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 3 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 16)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | leg_pos     |          12 |
+|   1    | wheel_vel   |           4 |
+|   2    | arm_ik      |           0 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++--------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (876,)) |
++----------------+-------------+-------------------+
+|     Index      | Name        |       Shape       |
++----------------+-------------+-------------------+
+|       0        | obs         |       (876,)      |
++----------------+-------------+-------------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 4 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | bad_contact |  False   |
+|   2   | tilt        |  False   |
+|   3   | low_height  |  False   |
++-------+-------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 43 active terms.
++---------------------------------------------------------+
+|                   Active Reward Terms                   |
++-------+--------------------------+----------------------+
+| Index | Name                     |               Weight |
++-------+--------------------------+----------------------+
+|   0   | term_bad_contact         |              -3000.0 |
+|   1   | term_tilt                |              -3000.0 |
+|   2   | term_low_height          |              -3000.0 |
+|   3   | leg_action_l2            |               -0.003 |
+|   4   | tracking_lin_vel         |                  0.6 |
+|   5   | tracking_lin_vel_x_exp   |                  1.5 |
+|   6   | tracking_ang_vel_yaw_l1  |                  0.0 |
+|   7   | tracking_ang_vel_yaw_exp |                  1.5 |
+|   8   | tracking_lin_vel_y_l2    |                  0.0 |
+|   9   | tracking_lin_vel_z_l2    |                  0.0 |
+|   10  | survive                  |                  0.0 |
+|   11  | foot_contacts_z          |                  0.0 |
+|   12  | torques                  |             -7.5e-06 |
+|   13  | tracking_lin_vel_y       |                  0.0 |
+|   14  | lin_vel_z                | -0.44999999999999996 |
+|   15  | ang_vel_xy               |                -0.06 |
+|   16  | tracking_ang_vel         |                  0.3 |
+|   17  | work                     |              -0.0009 |
+|   18  | dof_acc                  |            -2.25e-07 |
+|   19  | action_rate              |              -0.0045 |
+|   20  | dof_pos_limits           |                 -3.0 |
+|   21  | delta_torques            |               -3e-08 |
+|   22  | collision                |                 -3.0 |
+|   23  | walking_dof              |                 0.03 |
+|   24  | hip_pos                  |                -0.06 |
+|   25  | feet_jerk                |               -6e-05 |
+|   26  | alive                    |                  0.3 |
+|   27  | feet_drag                |               -0.024 |
+|   28  | feet_contact_forces      |              -0.0003 |
+|   29  | roll                     |                 -0.3 |
+|   30  | base_height              |                 -0.6 |
+|   31  | tracking_lin_vel_max     |  0.44999999999999996 |
+|   32  | flat_orientation_l2      |                 -0.6 |
+|   33  | air_time_variance        |                 -0.3 |
+|   34  | feet_height              |                  0.0 |
+|   35  | feet_air_time            |                0.015 |
+|   36  | update_last_buffers      |                  0.0 |
+|   37  | wheel_idle_speed         |              -0.0009 |
+|   38  | wheel_action_l2          |              -0.0003 |
+|   39  | wheel_action_rate        |              -0.0006 |
+|   40  | teacher_ensemble_match   |  0.22499999999999998 |
+|   41  | wheel_forward_use        |                 0.18 |
+|   42  | wheel_turn_support       |                0.135 |
++-------+--------------------------+----------------------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+sweep_config {'steps': 90, 'warmup': 45, 'magnitude': 1.0, 'wheel_damping': 1.0, 'patterns': ['forward_rearflip', 'ideal_yaw', 'tactic_yaw_plus', 'tactic_yaw_minus', 'allplus_yaw', 'front_yaw', 'rear_yaw']}
+sample forward_rearflip step 45 vx 0.017368221655488014 wz -0.0017256628489121795 z 0.45292872190475464 tilt 0.007851554080843925 wheel_vel [0.23863570392131805, 0.1719471961259842, -0.5039268732070923, 0.06162430718541145] wheel_target [0.3333333432674408, 0.3333333432674408, -0.3333333432674408, -0.3333333432674408]
+sample forward_rearflip step 89 vx 0.0012659233761951327 wz 0.009019198827445507 z 0.4606897234916687 tilt 0.021812329068779945 wheel_vel [0.06922171264886856, 0.0623662993311882, -0.33442339301109314, -0.0987810268998146] wheel_target [1.0, 1.0, -1.0, -1.0]
+response forward_rearflip pattern [1.0, 1.0, -1.0, -1.0] mean_vx_active 0.023313100426457824 mean_wz_active 0.0021912875928036457 final_vx 0.0012659233761951327 final_wz 0.009019198827445507 min_z_active 0.45188695192337036 max_tilt_active 0.021812329068779945 tilt_term False low_term False bad_term False
+sample ideal_yaw step 45 vx 0.01857808046042919 wz -0.0029315741267055273 z 0.45309874415397644 tilt 0.007036137394607067 wheel_vel [0.14785252511501312, 0.18688027560710907, -0.577906608581543, 0.0393618568778038] wheel_target [-0.3333333432674408, 0.3333333432674408, 0.3333333432674408, -0.3333333432674408]
+sample ideal_yaw step 89 vx -0.004374494776129723 wz 0.0032512841280549765 z 0.4532092213630676 tilt 0.008459772914648056 wheel_vel [-0.16724011301994324, 0.140021413564682, -0.5118442177772522, 0.15148833394050598] wheel_target [-1.0, 1.0, 1.0, -1.0]
+response ideal_yaw pattern [-1.0, 1.0, 1.0, -1.0] mean_vx_active 0.002865399060667389 mean_wz_active 0.002438085708773643 final_vx -0.004374494776129723 final_wz 0.0032512841280549765 min_z_active 0.4523954689502716 max_tilt_active 0.008987382054328918 tilt_term False low_term False bad_term False
+sample tactic_yaw_plus step 45 vx 0.0259545985609293 wz -0.0059936498291790485 z 0.45439207553863525 tilt 0.0046660709194839 wheel_vel [-0.6543447971343994, 0.20175740122795105, -0.5475820302963257, -0.02637510746717453] wheel_target [-0.3333333432674408, 0.3333333432674408, 0.3333333432674408, 0.3333333432674408]
+sample tactic_yaw_plus step 89 vx -0.022153163328766823 wz -0.0015477462438866496 z 0.44610556960105896 tilt 0.027914011850953102 wheel_vel [-0.13513395190238953, 0.1917324811220169, -0.4984436333179474, -0.16672956943511963] wheel_target [-1.0, 1.0, 1.0, 1.0]
+response tactic_yaw_plus pattern [-1.0, 1.0, 1.0, 1.0] mean_vx_active -0.010076514901528652 mean_wz_active 0.006725616901126664 final_vx -0.022153163328766823 final_wz -0.0015477462438866496 min_z_active 0.44610556960105896 max_tilt_active 0.027914011850953102 tilt_term False low_term False bad_term False
+sample tactic_yaw_minus step 45 vx 0.02720174752175808 wz -0.0068332599475979805 z 0.4546201229095459 tilt 0.004786245059221983 wheel_vel [0.5022831559181213, 0.3525777757167816, -0.4094402492046356, -0.04340316727757454] wheel_target [0.3333333432674408, -0.3333333432674408, -0.3333333432674408, 0.3333333432674408]
+sample tactic_yaw_minus step 89 vx 0.008574956096708775 wz 0.0006909467047080398 z 0.4601336419582367 tilt 0.018741318956017494 wheel_vel [0.09710060805082321, 0.33027827739715576, -1.009644865989685, 0.09542663395404816] wheel_target [1.0, -1.0, -1.0, 1.0]
+response tactic_yaw_minus pattern [1.0, -1.0, -1.0, 1.0] mean_vx_active 0.015328299202438857 mean_wz_active 0.0010877164276381437 final_vx 0.008574956096708775 final_wz 0.0006909467047080398 min_z_active 0.4546201229095459 max_tilt_active 0.018741318956017494 tilt_term False low_term False bad_term False
+sample allplus_yaw step 45 vx 0.027467623353004456 wz -0.004643743392080069 z 0.4546733498573303 tilt 0.0049153161235153675 wheel_vel [-0.9510248303413391, 0.1756044179201126, -0.5279091000556946, -0.045233383774757385] wheel_target [-0.3333333432674408, 0.3333333432674408, -0.3333333432674408, 0.3333333432674408]
+sample allplus_yaw step 89 vx 0.005141574423760176 wz 0.00030374492052942514 z 0.4523926377296448 tilt 0.014108476229012012 wheel_vel [-0.15208089351654053, 0.11230606585741043, -0.3992273211479187, 0.09161856025457382] wheel_target [-1.0, 1.0, -1.0, 1.0]
+response allplus_yaw pattern [-1.0, 1.0, -1.0, 1.0] mean_vx_active -0.003914883982926969 mean_wz_active -0.0028473828482674436 final_vx 0.005141574423760176 final_wz 0.00030374492052942514 min_z_active 0.45213353633880615 max_tilt_active 0.015250804834067822 tilt_term False low_term False bad_term False
+sample front_yaw step 45 vx 0.02466922253370285 wz -0.0005998106207698584 z 0.4545898735523224 tilt 0.004436963237822056 wheel_vel [-0.7256683707237244, 0.20928770303726196, -0.570058286190033, -0.015490288846194744] wheel_target [-0.3333333432674408, 0.3333333432674408, 0.0, 0.0]
+sample front_yaw step 89 vx 0.0014576308894902468 wz 0.0012328693410381675 z 0.45300695300102234 tilt 0.012018547393381596 wheel_vel [-0.15825653076171875, 0.12622255086898804, -0.4744565784931183, 0.05640877038240433] wheel_target [-1.0, 1.0, 0.0, 0.0]
+response front_yaw pattern [-1.0, 1.0, 0.0, 0.0] mean_vx_active -0.0015034483878278277 mean_wz_active -0.0011180059494411883 final_vx 0.0014576308894902468 final_wz 0.0012328693410381675 min_z_active 0.45295828580856323 max_tilt_active 0.013224758207798004 tilt_term False low_term False bad_term False
+sample rear_yaw step 45 vx 0.025284448638558388 wz -0.008907320909202099 z 0.4546886086463928 tilt 0.005071952007710934 wheel_vel [0.40055757761001587, 0.26058778166770935, -0.560112476348877, 0.020050279796123505] wheel_target [0.0, 0.0, 0.3333333432674408, -0.3333333432674408]
+sample rear_yaw step 89 vx 0.0005841561942361295 wz 0.003348501166328788 z 0.45370757579803467 tilt 0.006667003501206636 wheel_vel [-0.45754995942115784, 0.317142516374588, -0.4950527250766754, 0.11262841522693634] wheel_target [0.0, 0.0, 1.0, -1.0]
+response rear_yaw pattern [0.0, 0.0, 1.0, -1.0] mean_vx_active -0.0012565383509758653 mean_wz_active 0.001458218157899359 final_vx 0.0005841561942361295 final_wz 0.003348501166328788 min_z_active 0.45370757579803467 max_tilt_active 0.010158056393265724 tilt_term False low_term False bad_term False
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260818_043509.log
+2026-08-17T20:35:10Z [447ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-08-17T20:35:10Z [943ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-08-17T20:35:10Z [1,232ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 119536
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-17T20:35:14Z [4,772ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0

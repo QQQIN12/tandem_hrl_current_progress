@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_lower_init_zero_wheel.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.36308316548665365,
+      "mean_yaw_error_radps": 0.05943747838338216,
+      "mean_body_vx_mps": -0.002947681148846944,
+      "mean_body_wz_radps": 0.0036365838845570883
+    },
+    "reverse": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.24844940185546874,
+      "mean_yaw_error_radps": 0.0760232925415039,
+      "mean_body_vx_mps": -0.01598278045654297,
+      "mean_body_wz_radps": -0.015286490122477214
+    },
+    "yaw_left": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.07758329391479492,
+      "mean_yaw_error_radps": 0.4522560119628906,
+      "mean_body_vx_mps": -0.0037477378050486247,
+      "mean_body_wz_radps": 0.004163845777511597
+    },
+    "yaw_right": {
+      "episodes": 1,
+      "stable_rate": 0.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.3931568301453882,
+      "mean_yaw_error_radps": 0.5443789812983298,
+      "mean_body_vx_mps": -0.1389540166270976,
+      "mean_body_wz_radps": -0.010035745951594139
+    },
+    "forward_arc": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2600075022379557,
+      "mean_yaw_error_radps": 0.3526072184244792,
+      "mean_body_vx_mps": 0.0040190136432647705,
+      "mean_body_wz_radps": 0.012710795402526856
+    },
+    "stationary": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.0470107364654541,
+      "mean_yaw_error_radps": 0.038291120529174806,
+      "mean_body_vx_mps": -0.010606547991434734,
+      "mean_body_wz_radps": -0.010347662766774495
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.35069732666015624,
+      "mean_yaw_error_radps": 0.05187800804773966,
+      "mean_body_vx_mps": 0.0036087972670793534,
+      "mean_body_wz_radps": 0.009131002227465311
+    },
+    "reverse": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2489227867126465,
+      "mean_yaw_error_radps": 0.03755158543586731,
+      "mean_body_vx_mps": -0.016107535759607952,
+      "mean_body_wz_radps": -0.001833071162303289
+    },
+    "yaw_left": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.07178239027659097,
+      "mean_yaw_error_radps": 0.4625751495361328,
+      "mean_body_vx_mps": -0.0036240609486897788,
+      "mean_body_wz_radps": 0.005963371644417445
+    },
+    "yaw_right": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.054980305830637614,
+      "mean_yaw_error_radps": 0.4533042907714843,
+      "mean_body_vx_mps": -0.011086257696151734,
+      "mean_body_wz_radps": 0.0003674680770685275
+    },
+    "forward_arc": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2502014287312826,
+      "mean_yaw_error_radps": 0.3536604754130045,
+      "mean_body_vx_mps": 0.011062499086062112,
+      "mean_body_wz_radps": 0.005727302432060242
+    },
+    "stationary": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.06524380445480346,
+      "mean_yaw_error_radps": 0.06573030392328899,
+      "mean_body_vx_mps": -0.0020303273449341457,
+      "mean_body_wz_radps": 0.010392381250858307
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "stationary": {
+      "episodes": 1,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.06829074223836264,
+      "mean_yaw_error_radps": 0.047480328877766924,
+      "mean_body_vx_mps": 0.0018295830488204957,
+      "mean_body_wz_radps": 0.003706812858581543
+    }
+  }
+}

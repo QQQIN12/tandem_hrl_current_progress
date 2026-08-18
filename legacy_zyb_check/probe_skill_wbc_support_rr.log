@@ -1,0 +1,201 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+======Missing terms====== 
+['tracking_lin_vel', 'tracking_lin_vel_max', 'tracking_ang_vel', 'tracking_lin_vel_x_exp', 'tracking_ang_vel_yaw_exp', 'torques', 'stand_still', 'walking_dof', 'alive', 'lin_vel_z', 'roll', 'ang_vel_xy', 'dof_acc', 'collision', 'dof_pos_limits', 'hip_pos', 'feet_jerk', 'feet_drag', 'feet_contact_forces', 'base_height', 'flat_orientation_l2', 'air_time_variance', 'tracking_lin_vel_x_l1', 'tracking_contacts_shaped_force', 'tracking_contacts_shaped_vel', 'feet_air_time', 'delta_torques', 'work', 'energy_square', 'dof_default_pos', 'dof_error', 'orientation', 'orientation_walking', 'orientation_standing', 'torques_walking', 'torques_standing', 'energy_square_walking', 'energy_square_standing', 'base_height_walking', 'base_height_standing', 'penalty_lin_vel_y', 'hip_action_l2', 'leg_energy_abs_sum', 'leg_energy_sum_abs', 'leg_action_l2', 'leg_energy', 'tracking_ee_sphere', 'tracking_ee_world', 'tracking_ee_sphere_walking', 'tracking_ee_sphere_standing', 'tracking_ee_cart', 'tracking_ee_orn', 'tracking_ee_orn_ry', 'arm_energy_abs_sum', 'wheel_idle_speed', 'wheel_action_l2', 'wheel_action_rate', 'teacher_ensemble_match', 'wheel_forward_use', 'wheel_turn_support', 'term_bad_contact', 'term_tilt', 'term_low_height']
+ =======================
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-18_05-32-22.log[0m
+[36m======================================================================================[0m
+
+[33m05:32:22 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 271828
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 833.3333333333334
+	Environment step-size : 0.03333333333333333
+[33m05:32:22 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 118.152738 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 2
+	Environment spacing   : 4.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 1.020348 seconds
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++-------------------------------------------+
+|            Active Command Terms           |
++-------+------------+----------------------+
+| Index | Name       |         Type         |
++-------+------------+----------------------+
+|   0   | locomotion | SkillVelocityCommand |
++-------+------------+----------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++-----------------------------------+
+| Active Event Terms in Mode: 'reset' |
++-----------+-----------------------+
+|   Index   | Name                  |
++-----------+-----------------------+
+|     0     | reset_root            |
+|     1     | reset_joints          |
++-----------+-----------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++-----------------------------------+
+|  Active Action Terms (shape: 20)  |
++---------+-----------+-------------+
+|  Index  | Name      |   Dimension |
++---------+-----------+-------------+
+|    0    | leg_pos   |          20 |
++---------+-----------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++--------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (67,)) |
++----------------+----------------+----------------+
+|     Index      | Name           |     Shape      |
++----------------+----------------+----------------+
+|       0        | state          |     (67,)      |
++----------------+----------------+----------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 0 active terms.
++----------------------------+
+|  Active Termination Terms  |
++--------+-------+-----------+
+| Index  | Name  |  Time Out |
++--------+-------+-----------+
++--------+-------+-----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++--------------------------------------+
+|         Active Reward Terms          |
++-------+--------------------+---------+
+| Index | Name               |  Weight |
++-------+--------------------+---------+
+|   0   | velocity_tracking  |     6.0 |
+|   1   | yaw_tracking       |     4.0 |
+|   2   | command_alignment  |     1.5 |
+|   3   | yaw_load_transfer  |     2.0 |
+|   4   | support            |     0.5 |
+|   5   | stability          |    -4.0 |
+|   6   | action_rate        | -0.0045 |
+|   7   | leg_residual       |  -0.006 |
+|   8   | wheel_coordinate   |  -0.002 |
+|   9   | support_allocation |  -0.001 |
++-------+--------------------+---------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+probe_config {'patterns': ['ideal_yaw'], 'support_modes': [(0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)], 'entries': [('ideal_yaw', (0.0, 0.0, 0.0, 0.0)), ('ideal_yaw', (0.0, 0.0, 0.0, 1.0))], 'magnitude': 60.0, 'settle_steps': 30, 'motion_steps': 60, 'ramp_steps': 20, 'action_dim': 20}
+sample 0 body_vx [-0.1364617645740509, -0.16203822195529938] body_wz [-0.032805148512125015, 0.14259719848632812] height [0.4602707028388977, 0.45095592737197876] tilt [0.03155691549181938, 0.06599978357553482] wheel_vel [[-1.1444108486175537, -0.6824644207954407, 0.38482633233070374, -0.08327153325080872], [-2.2004730701446533, -0.6927535533905029, -0.01874656230211258, 0.17448702454566956]] wheel_target [[-3.0, 3.0, 3.0, -3.0], [-3.0, 3.0, 3.0, -3.0]] contact_force [[137.91363525390625, 137.51348876953125, 278.2397155761719, 272.1183776855469], [117.658447265625, 131.48532104492188, 274.8545837402344, 206.91175842285156]] leg_correction [0.12871766090393066, 0.133893221616745]
+sample 30 body_vx [-0.09046028554439545, 0.028802407905459404] body_wz [-0.11121798306703568, 0.008888469077646732] height [0.3951016962528229, 0.39482739567756653] tilt [0.2828877568244934, 0.3330840766429901] wheel_vel [[-3.0612120628356934, 4.059273719787598, 0.5930874347686768, 0.0819600522518158], [-1.9787765741348267, 2.7148027420043945, 0.8726368546485901, 0.3563271760940552]] wheel_target [[-60.0, 60.0, 60.0, -60.0], [-60.0, 60.0, 60.0, -60.0]] contact_force [[90.96758270263672, 64.19578552246094, 195.4471435546875, 309.8309326171875], [142.39634704589844, 65.57878875732422, 210.81640625, 284.23089599609375]] leg_correction [0.1385640650987625, 0.12561681866645813]
+sample 59 body_vx [-0.02040831372141838, 0.0024331635795533657] body_wz [-0.018159806728363037, -0.031062228605151176] height [0.38767215609550476, 0.388749897480011] tilt [0.3153199553489685, 0.3390008211135864] wheel_vel [[-0.8082007765769958, 3.5573651790618896, -0.1777336448431015, 0.06493183970451355], [-0.7101780772209167, 5.078784465789795, 0.498358815908432, 0.00928743276745081]] wheel_target [[-60.0, 60.0, 60.0, -60.0], [-60.0, 60.0, 60.0, -60.0]] contact_force [[117.17213439941406, 72.82974243164062, 196.1602325439453, 334.97406005859375], [148.36878967285156, 64.3495101928711, 204.46615600585938, 304.0464782714844]] leg_correction [0.1385640650987625, 0.12926532328128815]
+{
+  "gate": "20-D SupportWBC direct executor probe",
+  "counts_as_final_hrl_evaluation": false,
+  "magnitude": 60.0,
+  "settle_steps": 30,
+  "motion_steps": 60,
+  "ramp_steps": 20,
+  "wheel_damping": 2.0,
+  "patterns": [
+    {
+      "pattern": "ideal_yaw",
+      "wheel_FL_FR_RL_RR": [
+        -1.0,
+        1.0,
+        1.0,
+        -1.0
+      ],
+      "support_FL_FR_RL_RR": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_body_vx_mps": -0.07999120652675629,
+      "mean_body_vy_mps": -0.026620065793395042,
+      "mean_body_wz_radps": -0.16632762551307678,
+      "world_displacement_xy_m": [
+        -0.15801310539245605,
+        -0.022791385650634766
+      ],
+      "max_tilt_rad": 0.3155444860458374,
+      "min_base_height_m": 0.38210824131965637,
+      "min_support_count": 4.0,
+      "max_leg_correction_norm_rad": 0.1385640650987625
+    },
+    {
+      "pattern": "ideal_yaw",
+      "wheel_FL_FR_RL_RR": [
+        -1.0,
+        1.0,
+        1.0,
+        -1.0
+      ],
+      "support_FL_FR_RL_RR": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mean_body_vx_mps": -0.03263954818248749,
+      "mean_body_vy_mps": -0.013868361711502075,
+      "mean_body_wz_radps": -0.09157181531190872,
+      "world_displacement_xy_m": [
+        -0.052220821380615234,
+        -0.021743416786193848
+      ],
+      "max_tilt_rad": 0.3417707085609436,
+      "min_base_height_m": 0.3835436999797821,
+      "min_support_count": 4.0,
+      "max_leg_correction_norm_rad": 0.1385640650987625
+    }
+  ]
+}
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260818_053215.log
+2026-08-17T21:32:16Z [429ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-08-17T21:32:16Z [955ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-08-17T21:32:16Z [1,233ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 119083
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-17T21:32:20Z [4,699ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0

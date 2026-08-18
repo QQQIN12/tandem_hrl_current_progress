@@ -1,0 +1,513 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: quadruped_arm.tasks.manager_based.TACTIC_HRL.TACTIC_HRL_env_cfg:TACTICSingleObjectCurriculumEnvCfg
+======Missing terms====== 
+[]
+ =======================
+[INFO]: Parsing configuration from: quadruped_arm.tasks.manager_based.TACTIC_HRL.agents.rsl_rl_TACTIC_HRL_cfg:TACTICRunnerCfg
+[INFO] Logging experiment in directory: /root/gpufree-data/tandem_hrl_620d798/logs/rsl_rl/TACTIC_HRL
+Exact experiment name requested from command line: 2026-08-17_20-35-27
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-17_20-35-27.log[0m
+[36m======================================================================================[0m
+
+[33m20:35:27 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 271828
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 0.03333333333333333
+	Environment step-size : 0.03333333333333333
+[33m20:35:27 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 4.578239 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 32
+	Environment spacing   : 6.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 1.030427 seconds
+[INFO] Command Manager:  <CommandManager> contains 2 active terms.
++-------------------------------------------+
+|            Active Command Terms           |
++-------+------------+----------------------+
+| Index | Name       |         Type         |
++-------+------------+----------------------+
+|   0   | locomotion | TACTICMissionCommand |
+|   1   | ee_goal    | TACTICEeGoalCommand  |
++-------+------------+----------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'reset'  |
++--------+-----------------------------+
+| Index  | Name                        |
++--------+-----------------------------+
+|   0    | reset_root                  |
+|   1    | reset_joints                |
+|   2    | init_priv                   |
+|   3    | reset_rewards               |
+|   4    | reset_left_finger_open      |
+|   5    | reset_right_finger_open     |
+|   6    | reset_grasp_object          |
+|   7    | reset_grasp_object_tall     |
+|   8    | reset_grasp_object_flat     |
+|   9    | reset_grasp_object_round    |
+|   10   | reset_grasp_object_slim     |
+|   11   | reset_grasp_object_wide     |
++--------+-----------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 5 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 63)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | leg_pos     |          12 |
+|   1    | wheel_vel   |           4 |
+|   2    | arm_ik      |           0 |
+|   3    | gripper     |           1 |
+|   4    | hierarchy   |          46 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 2 groups.
++-----------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (1003,)) |
++-----------+---------------------------------+-------------+
+|   Index   | Name                            |    Shape    |
++-----------+---------------------------------+-------------+
+|     0     | obs                             |    (876,)   |
+|     1     | tactic_tau_down                 |    (77,)    |
+|     2     | tactic_tau_up                   |    (48,)    |
+|     3     | tactic_task_skill               |     (2,)    |
++-----------+---------------------------------+-------------+
++-------------------------------------------------------------+
+| Active Observation Terms in Group: 'hierarchy_context' (shape: (529,)) |
++-----------------+----------------------+--------------------+
+|      Index      | Name                 |       Shape        |
++-----------------+----------------------+--------------------+
+|        0        | context              |       (529,)       |
++-----------------+----------------------+--------------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 5 active terms.
++------------------------------------+
+|      Active Termination Terms      |
++-------+-----------------+----------+
+| Index | Name            | Time Out |
++-------+-----------------+----------+
+|   0   | time_out        |   True   |
+|   1   | bad_contact     |  False   |
+|   2   | tilt            |  False   |
+|   3   | low_height      |  False   |
+|   4   | mission_success |  False   |
++-------+-----------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 71 active terms.
++----------------------------------------------------------------+
+|                      Active Reward Terms                       |
++-------+---------------------------------+----------------------+
+| Index | Name                            |               Weight |
++-------+---------------------------------+----------------------+
+|   0   | term_bad_contact                |               -120.0 |
+|   1   | term_tilt                       |               -100.0 |
+|   2   | term_low_height                 |               -100.0 |
+|   3   | leg_action_l2                   |               -0.003 |
+|   4   | tracking_lin_vel                |                  0.0 |
+|   5   | tracking_ang_vel_yaw_l1         |                  0.0 |
+|   6   | tracking_ang_vel_yaw_exp        |                  0.0 |
+|   7   | tracking_lin_vel_y_l2           |                  0.0 |
+|   8   | tracking_lin_vel_z_l2           |                  0.0 |
+|   9   | survive                         |                  0.0 |
+|   10  | foot_contacts_z                 |                  0.0 |
+|   11  | torques                         |             -7.5e-06 |
+|   12  | tracking_lin_vel_y              |                  0.0 |
+|   13  | lin_vel_z                       | -0.44999999999999996 |
+|   14  | ang_vel_xy                      |                -0.06 |
+|   15  | tracking_ang_vel                |                0.105 |
+|   16  | work                            |              -0.0009 |
+|   17  | dof_acc                         |            -2.25e-07 |
+|   18  | action_rate                     |              -0.0045 |
+|   19  | dof_pos_limits                  |                 -3.0 |
+|   20  | delta_torques                   |               -3e-08 |
+|   21  | collision                       |                 -3.0 |
+|   22  | walking_dof                     |                 0.15 |
+|   23  | hip_pos                         |                -0.06 |
+|   24  | feet_jerk                       |               -6e-05 |
+|   25  | alive                           |                  0.3 |
+|   26  | feet_drag                       |               -0.024 |
+|   27  | feet_contact_forces             |              -0.0003 |
+|   28  | roll                            |                 -0.3 |
+|   29  | base_height                     |                 -1.5 |
+|   30  | tracking_lin_vel_max            |  0.44999999999999996 |
+|   31  | flat_orientation_l2             |                -0.15 |
+|   32  | air_time_variance               | -0.44999999999999996 |
+|   33  | feet_height                     |                  0.0 |
+|   34  | feet_air_time                   |                0.015 |
+|   35  | update_last_buffers             |                  0.0 |
+|   36  | wheel_idle_speed                |              -0.0009 |
+|   37  | wheel_action_l2                 |              -0.0003 |
+|   38  | wheel_action_rate               |              -0.0006 |
+|   39  | wheel_forward_use               |                  1.1 |
+|   40  | wheel_turn_support              |                  0.6 |
+|   41  | tactic_mission_completion       |                  6.0 |
+|   42  | tactic_mission_success          |                 36.0 |
+|   43  | tactic_task_progress            |    7.199999999999999 |
+|   44  | tactic_task_tracking            |                 0.24 |
+|   45  | tactic_ee_tracking              |                 0.72 |
+|   46  | tactic_valid_task               |                 0.06 |
+|   47  | tactic_invalid_task             |                 -0.6 |
+|   48  | tactic_option_switch            |                -0.03 |
+|   49  | tactic_control_progress         |                  8.4 |
+|   50  | tactic_cbf_margin               |                  0.0 |
+|   51  | tactic_predicted_margin         |                  0.0 |
+|   52  | tactic_clf_decrease             |                  0.0 |
+|   53  | tactic_disturbance_rejection    |                  0.0 |
+|   54  | tactic_safety_violation         |                -0.75 |
+|   55  | tactic_unsafe_progress          |  -3.5999999999999996 |
+|   56  | tactic_object_contact           |   1.7999999999999998 |
+|   57  | tactic_object_lift              |                  3.0 |
+|   58  | tactic_object_transport         |   3.5999999999999996 |
+|   59  | tactic_object_place             |   5.3999999999999995 |
+|   60  | tactic_object_completion        |                 12.0 |
+|   61  | tactic_interaction_frontier     |                 96.0 |
+|   62  | tactic_grasp_hold               |                  1.5 |
+|   63  | tactic_payload_progress         |                  9.6 |
+|   64  | tactic_release_readiness        |    7.199999999999999 |
+|   65  | tactic_intended_release         |                  6.0 |
+|   66  | tactic_payload_retention        |   1.7999999999999998 |
+|   67  | tactic_payload_drop             |                -13.5 |
+|   68  | tactic_release_quality          |   1.7999999999999998 |
+|   69  | tactic_wrong_object_interaction |                 -2.4 |
+|   70  | tactic_all_objects              |                  0.0 |
++-------+---------------------------------+----------------------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy', 'hierarchy_context']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=1003, out_features=256, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=256, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=63, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=1532, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+[INFO] TACTIC physical initialization from: /root/gpufree-data/zyb_v0_model_1023.pt
+[INFO] Verified migrated tensors: ['actor.0.weight->actor.physical_backbone.0.weight', 'actor.0.bias->actor.physical_backbone.0.bias', 'actor.2.weight->actor.physical_backbone.2.weight', 'actor.2.bias->actor.physical_backbone.2.bias', 'actor.4.weight->actor.physical_head.weight[:16]', 'actor.4.bias->actor.physical_head.bias[:16]', 'actor_obs_normalizer._mean[:876]', 'actor_obs_normalizer._var[:876]', 'actor_obs_normalizer._std[:876]', 'actor_obs_normalizer.count']
+[INFO] TACTIC stage=stability: trainable=1208850/2175778, frozen_physical_executor=158033
+################################################################################
+                        [1m Learning iteration 0/1 [0m                        
+
+                       Computation: 116 steps/s (collection: 5.672s, learning 0.918s)
+             Mean action noise std: 0.03
+          Mean value_function loss: 394.9306
+               Mean surrogate loss: 0.1126
+                 Mean entropy loss: -102.1735
+ Mean next_control_prediction loss: 0.0908
+       Mean skill_feasibility loss: 0.6931
+ Mean task_outcome_prediction loss: 0.0443
+ Mean task_outcome_confidence loss: 1.3073
+Mean task_outcome_confidence_mean loss: 0.1192
+Mean skill_outcome_prediction loss: 0.0338
+        Mean payload_survival loss: 0.0000
+Mean payload_survival_support loss: 0.0000
+   Mean payload_drop_fraction loss: 0.0000
+Mean payload_survival_prediction loss: 0.0000
+ Mean skill_effect_prediction loss: 0.1013
+ Mean skill_effect_confidence loss: 1.0412
+Mean skill_effect_confidence_mean loss: 0.1192
+Mean motion_execution_prediction loss: 0.1065
+Mean motion_execution_confidence loss: 0.9650
+Mean embodiment_response_prediction loss: 0.0227
+Mean embodiment_response_vx_abs loss: 0.0022
+Mean embodiment_response_wz_abs loss: 0.0007
+   Mean constraint_multiplier loss: 0.1120
+Mean task_constraint_multiplier_mean loss: 0.1632
+Mean skill_constraint_multiplier_mean loss: 0.1632
+ Mean hierarchy_cbf_violation loss: 0.4159
+Mean hierarchy_cbf_raw_violation loss: 0.4178
+Mean hierarchy_cbf_transient_slack loss: 0.0032
+ Mean hierarchy_clf_violation loss: 0.0572
+Mean hierarchy_cbf_regression loss: 0.0489
+Mean hierarchy_clf_regression loss: 0.0334
+   Mean safe_task_achievement loss: -0.1070
+  Mean safe_skill_achievement loss: -0.0249
+Mean unsafe_positive_progress_rate loss: 0.1117
+Mean motion_execution_confidence_mean loss: 0.1192
+Mean grounded_effect_diversity loss: 0.0000
+      Mean task_option_credit loss: -0.0029
+     Mean skill_option_credit loss: 0.0369
+    Mean event_hindsight_task loss: 0.0000
+   Mean event_hindsight_skill loss: 2.4666
+       Mean event_credit_mass loss: 0.0035
+Mean task_option_advantage_abs loss: 0.7749
+Mean skill_option_advantage_abs loss: 0.7687
+         Mean task_transition loss: 2.3078
+        Mean skill_transition loss: 1.3729
+       Mean motion_transition loss: 1.4348
+  Mean interaction_transition loss: 1.2800
+Mean interaction_active_fraction loss: 0.8365
+              Mean task_usage loss: 0.0000
+  Mean task_frontier_coverage loss: 0.0000
+Mean selected_frontier_probability loss: 0.7048
+       Mean interaction_phase loss: 0.3838
+Mean interaction_release_target loss: 0.0144
+Mean interaction_release_frontier loss: 0.0000
+Mean interaction_release_balance_weight loss: 1.1005
+  Mean task_control_objective loss: 0.0465
+        Mean task_clf_descent loss: 0.0001
+  Mean task_barrier_authority loss: 0.1326
+Mean skill_predictive_control loss: 0.0124
+Mean relational_subgoal_grounding loss: 0.0000
+  Mean task_subgoal_alignment loss: 1.0000
+  Mean task_subgoal_authority loss: 0.2292
+   Mean task_skill_projection loss: 0.0009
+ Mean task_transient_capacity loss: 0.6613
+   Mean task_posture_capacity loss: 0.3312
+Mean task_projected_turn_demand loss: 0.2373
+Mean task_semantic_turn_demand loss: 0.2373
+Mean task_lateral_turn_demand loss: 0.0000
+Mean task_target_yaw_residual loss: 0.4315
+Mean task_interaction_authority loss: 0.0235
+    Mean task_arm_scope_error loss: 0.0000
+Mean counterfactual_task_selection loss: 0.0000
+Mean counterfactual_task_target_entropy loss: 0.0000
+Mean counterfactual_task_target_peak loss: 0.0000
+Mean grounded_task_utility_span loss: 0.0000
+      Mean task_outcome_blend loss: 0.0000
+Mean grounded_task_target_agreement loss: 0.0000
+Mean sampled_task_target_probability loss: 0.0000
+Mean recovery_candidate_fraction loss: 0.0000
+Mean recovery_task_probability loss: 0.0085
+Mean recovery_target_probability loss: 0.0085
+Mean counterfactual_termination loss: 0.5273
+ Mean task_termination_target loss: 0.0000
+Mean skill_termination_target loss: 0.7448
+Mean payload_skill_barrier_pressure loss: 0.0000
+Mean payload_transient_demand loss: 0.2188
+Mean payload_skill_exit_target loss: 0.0000
+Mean payload_survival_exit_target loss: 0.0000
+Mean payload_survival_authority loss: 0.0000
+        Mean task_switch_gain loss: 0.0000
+       Mean skill_switch_gain loss: 0.1909
+Mean counterfactual_skill_selection loss: 1.0968
+Mean counterfactual_target_entropy loss: 0.9623
+Mean counterfactual_target_peak loss: 0.5940
+       Mean successor_decoder loss: 0.2001
+  Mean successor_predicted_vx loss: 0.0007
+  Mean successor_predicted_wz loss: -0.0072
+ Mean successor_predicted_cbf loss: 0.5000
+ Mean successor_predicted_clf loss: 0.5000
+ Mean successor_cbf_violation loss: 0.0011
+ Mean successor_clf_violation loss: 0.0344
+             Mean skill_usage loss: 0.0302
+        Mean skill_confidence loss: 0.7982
+     Mean task_slot_diversity loss: 0.4293
+Mean skill_embedding_diversity loss: 0.0621
+   Mean motion_gain_diversity loss: 0.0000
+Mean motion_objective_diversity loss: 0.0000
+       Mean event_replay_size loss: 61.0000
+   Mean event_replay_priority loss: 0.0214
+ Mean event_replay_task_valid loss: 0.7049
+Mean event_replay_task_detail_valid loss: 0.7049
+       Mean event_replay_task loss: 0.0000
+      Mean event_replay_skill loss: 0.6205
+     Mean event_replay_motion loss: 1.0716
+Mean event_replay_interaction loss: 0.0692
+Mean event_replay_task_subgoal loss: 0.0003
+Mean event_replay_skill_parameter loss: 0.0102
+  Mean event_replay_parameter loss: 0.0103
+Mean event_replay_barrier_quality loss: 0.4277
+Mean event_replay_unsafe_fraction loss: 0.0000
+Mean event_replay_buffer_unsafe_fraction loss: 0.0000
+Mean event_replay_buffer_delivery loss: 0.7213
+Mean event_replay_buffer_recovery loss: 0.0000
+Mean event_replay_sample_delivery loss: 0.7061
+Mean event_replay_sample_recovery loss: 0.0000
+Mean event_replay_sample_raw_delivery loss: 0.7049
+Mean event_replay_sample_raw_recovery loss: 0.0000
+Mean event_replay_recovery_pressure loss: 0.0000
+Mean event_replay_recovery_adapter_gate loss: 0.0000
+Mean event_replay_buffer_approach loss: 0.8636
+Mean event_replay_sample_approach loss: 0.6995
+Mean event_replay_sample_raw_approach loss: 0.6977
+Mean event_replay_buffer_secure loss: 0.1364
+Mean event_replay_sample_secure loss: 0.3005
+Mean event_replay_sample_raw_secure loss: 0.3023
+Mean event_replay_buffer_release loss: 0.0000
+Mean event_replay_sample_release loss: 0.0000
+Mean event_replay_sample_raw_release loss: 0.0000
+Mean payload_survival_replay_size loss: 0.0000
+Mean payload_survival_replay_support loss: 0.0000
+      Mean event_replay_added loss: 61.0000
+Mean event_replay_append_task_valid loss: 0.7213
+Mean event_replay_task_relabel loss: 0.2787
+Mean event_replay_interaction_relabel loss: 0.1639
+Mean event_replay_append_delivery loss: 0.7213
+Mean event_replay_append_recovery loss: 0.0000
+Mean event_replay_append_payload_recovery loss: 0.0000
+Mean payload_survival_replay_added loss: 0.0000
+Mean payload_survival_replay_append_drop_fraction loss: 0.0000
+      Mean hierarchy_cbf_dual loss: 0.5183
+      Mean hierarchy_clf_dual loss: 0.3489
+Mean hierarchy_cbf_violation_ema loss: 0.4159
+Mean hierarchy_clf_violation_ema loss: 0.0572
+Mean physical_adaptation_active loss: 0.0000
+Mean physical_adaptation_stage loss: -10.0000
+ Mean hierarchy_only_training loss: 0.0000
+Mean decomposition_only_training loss: 0.0000
+Mean motion_selector_only_training loss: 0.0000
+Mean interaction_selector_only_training loss: 0.0000
+Mean motion_skill_only_training loss: 0.0000
+Mean payload_motion_only_training loss: 0.0000
+Mean recovery_adapter_only_training loss: 0.0000
+ Mean auxiliary_learning_rate loss: 0.0000
+Mean payload_survival_learning_rate loss: 0.0003
+Mean physical_core_learning_rate loss: 0.0000
+Mean physical_adapter_learning_rate loss: 0.0000
+Mean skill_information_reward loss: 0.0000
+ Mean task_information_reward loss: 0.0000
+                       Mean reward: -39.32
+               Mean episode length: 8.00
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: -0.0122
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0001
+   Episode_Reward/tracking_lin_vel: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.0000
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0004
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0005
+         Episode_Reward/ang_vel_xy: -0.0013
+   Episode_Reward/tracking_ang_vel: 0.0000
+               Episode_Reward/work: -0.0076
+            Episode_Reward/dof_acc: -0.0250
+        Episode_Reward/action_rate: -0.0001
+     Episode_Reward/dof_pos_limits: -0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -0.0041
+        Episode_Reward/walking_dof: 0.0000
+            Episode_Reward/hip_pos: -0.0000
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.0003
+          Episode_Reward/feet_drag: -0.0000
+Episode_Reward/feet_contact_forces: -0.0002
+               Episode_Reward/roll: -0.0000
+        Episode_Reward/base_height: -0.0000
+Episode_Reward/tracking_lin_vel_max: 0.0004
+Episode_Reward/flat_orientation_l2: -0.0000
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: 0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.1069
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+  Episode_Reward/wheel_forward_use: 0.0000
+ Episode_Reward/wheel_turn_support: 0.0000
+Episode_Reward/tactic_mission_completion: 0.0000
+Episode_Reward/tactic_mission_success: 0.0000
+Episode_Reward/tactic_task_progress: -0.0000
+Episode_Reward/tactic_task_tracking: 0.0001
+ Episode_Reward/tactic_ee_tracking: 0.0003
+  Episode_Reward/tactic_valid_task: 0.0001
+Episode_Reward/tactic_invalid_task: 0.0000
+Episode_Reward/tactic_option_switch: -0.0000
+Episode_Reward/tactic_control_progress: -0.0000
+  Episode_Reward/tactic_cbf_margin: 0.0000
+Episode_Reward/tactic_predicted_margin: 0.0000
+Episode_Reward/tactic_clf_decrease: 0.0000
+Episode_Reward/tactic_disturbance_rejection: 0.0000
+Episode_Reward/tactic_safety_violation: -0.0003
+Episode_Reward/tactic_unsafe_progress: -0.0000
+Episode_Reward/tactic_object_contact: 0.0000
+ Episode_Reward/tactic_object_lift: 0.0000
+Episode_Reward/tactic_object_transport: 0.0000
+Episode_Reward/tactic_object_place: 0.0000
+Episode_Reward/tactic_object_completion: 0.0000
+Episode_Reward/tactic_interaction_frontier: 0.0000
+  Episode_Reward/tactic_grasp_hold: 0.0000
+Episode_Reward/tactic_payload_progress: 0.0000
+Episode_Reward/tactic_release_readiness: 0.0000
+Episode_Reward/tactic_intended_release: 0.0000
+Episode_Reward/tactic_payload_retention: 0.0000
+Episode_Reward/tactic_payload_drop: 0.0000
+Episode_Reward/tactic_release_quality: 0.0000
+Episode_Reward/tactic_wrong_object_interaction: 0.0000
+ Episode_Reward/tactic_all_objects: 0.0000
+      Episode_Termination/time_out: 0.0000
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0443
+    Episode_Termination/low_height: 0.0000
+Episode_Termination/mission_success: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 768
+                    Iteration time: 6.59s
+                      Time elapsed: 00:00:06
+                               ETA: 00:00:06
+
+Could not find git repository in /workspace/isaaclab/_isaac_sim/kit/python/lib/python3.11/site-packages/rsl_rl/__init__.py. Skipping.
+Could not find git repository in /root/gpufree-data/tandem_hrl_620d798/scripts/rsl_rl/train.py. Skipping.
+Training time: 7.91 seconds
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260817_203517.log
+2026-08-17T12:35:17Z [443ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-08-17T12:35:18Z [984ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-08-17T12:35:18Z [1,267ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 120639
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-17T12:35:21Z [4,831ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0
+2026-08-17T12:35:32Z [15,224ms] [Warning] [omni.physx.plugin] Detected a rigid at /World/envs/env_0/GraspObject with more than 4 velocity iterations being added to a TGS scene.The related behavior changed recently, please consult the changelog. This warning will only print once.

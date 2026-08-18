@@ -1,0 +1,3383 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers.
+# SPDX-License-Identifier: BSD-3-Clause
+
+"""Evaluate a trained RSL-RL checkpoint for a fixed rollout budget.
+
+This script mirrors ``play.py`` for policy loading, but exits after a fixed
+number of simulation steps and writes a compact CSV row. It is intended for
+post-training comparisons where video-only playback is not enough evidence.
+"""
+
+import argparse
+import csv
+import math
+import sys
+import types
+from pathlib import Path
+
+from isaaclab.app import AppLauncher
+
+import cli_args  # isort: skip
+
+parser = argparse.ArgumentParser(description="Evaluate an RSL-RL checkpoint.")
+parser.add_argument("--num_envs", type=int, default=128, help="Number of parallel environments.")
+parser.add_argument("--num_steps", type=int, default=300, help="Number of rollout steps.")
+parser.add_argument("--task", type=str, required=True, help="Environment task name.")
+parser.add_argument("--scenario", type=str, default="", help="Scenario label for CSV output.")
+parser.add_argument("--method", type=str, default="", help="Method label for CSV output.")
+parser.add_argument("--out_csv", type=Path, required=True, help="Output one-row CSV path.")
+parser.add_argument("--trace_csv", type=Path, default=None, help="Optional per-step metric trace CSV path.")
+parser.add_argument("--trace_env", type=int, default=0, help="Environment index recorded in the trace CSV.")
+parser.add_argument("--trace_stride", type=int, default=1, help="Record every Nth simulation step.")
+parser.add_argument("--video", action="store_true", help="Record the evaluated rollout.")
+parser.add_argument("--video_length", type=int, default=None, help="Recorded rollout length in simulation steps.")
+parser.add_argument("--video_width", type=int, default=1920, help="Recorded frame width.")
+parser.add_argument("--video_height", type=int, default=1080, help="Recorded frame height.")
+parser.add_argument("--video_folder", type=Path, default=None, help="Optional output directory for the rollout video.")
+parser.add_argument("--camera_eye", type=str, default="", help="Camera position formatted as x,y,z.")
+parser.add_argument("--camera_lookat", type=str, default="", help="Camera target formatted as x,y,z.")
+parser.add_argument(
+    "--camera_origin",
+    choices=("world", "env", "asset_root", "asset_body"),
+    default=None,
+    help="Coordinate frame for camera position and target.",
+)
+parser.add_argument("--camera_asset", type=str, default="robot", help="Tracked scene asset for an asset-relative camera.")
+parser.add_argument("--camera_body", type=str, default="base", help="Tracked body for an asset-body camera.")
+parser.add_argument(
+    "--camera_env_index",
+    type=int,
+    default=0,
+    help="Parallel environment followed by the viewport camera.",
+)
+parser.add_argument(
+    "--snapshot_pt",
+    type=Path,
+    default=None,
+    help="Optional first-step observation/action snapshot.",
+)
+parser.add_argument(
+    "--force_gripper_target",
+    type=float,
+    default=None,
+    help="Diagnostic override: 0 opens and 1 closes the command-owned gripper.",
+)
+parser.add_argument("--print_layout", action="store_true", help="Print robot and sensor body layouts.")
+parser.add_argument(
+    "--actor_diagnostics",
+    action="store_true",
+    help="Record structured actor means, support residuals, and support-teacher errors.",
+)
+parser.add_argument(
+    "--actor_diagnostics_stride",
+    type=int,
+    default=1,
+    help=(
+        "Evaluate policy-internal diagnostics every N simulation steps. "
+        "Physical and system metrics remain sampled every step."
+    ),
+)
+parser.add_argument(
+    "--compact_metrics",
+    action="store_true",
+    help="Keep the evidence metrics used by the formal evaluation tables.",
+)
+parser.add_argument("--zero_actions", action="store_true", help="Diagnostic rollout with all policy actions zeroed.")
+parser.add_argument(
+    "--stochastic_policy",
+    action="store_true",
+    help="Sample the training action distribution instead of using its mean.",
+)
+parser.add_argument(
+    "--allow_support_module_upgrade",
+    action="store_true",
+    help="Load an older checkpoint only when missing keys belong to zero-initialized support modules.",
+)
+parser.add_argument(
+    "--zyb_baseline_checkpoint",
+    type=Path,
+    default=None,
+    help=(
+        "Evaluate the original 16-D ZYB-v0 policy with a deterministic "
+        "task/skill dispatcher in the registered TACTIC environment."
+    ),
+)
+parser.add_argument(
+    "--stability_teacher_only",
+    action="store_true",
+    help=(
+        "Route the 12 leg and 4 wheel outputs through the migrated ZYB-v0 "
+        "teacher exactly during evaluation."
+    ),
+)
+parser.add_argument(
+    "--deterministic_reset",
+    action="store_true",
+    help="Disable joint/root reset noise for repeatable stance diagnostics.",
+)
+parser.add_argument("--per_env_csv", type=Path, default=None, help="Optional one-row-per-environment summary.")
+parser.add_argument("--front_thigh_deltas", type=str, default="", help="Comma-separated front-thigh stance offsets.")
+parser.add_argument("--front_calf_deltas", type=str, default="", help="Comma-separated front-calf stance offsets.")
+parser.add_argument("--rear_thigh_deltas", type=str, default="", help="Comma-separated rear-thigh stance offsets.")
+parser.add_argument("--rear_calf_deltas", type=str, default="", help="Comma-separated rear-calf stance offsets.")
+parser.add_argument(
+    "--fixed_base_command",
+    type=str,
+    default="",
+    help="Diagnostic base command override formatted as vx,vy,wz.",
+)
+parser.add_argument(
+    "--base_command_grid",
+    type=str,
+    default="",
+    help=(
+        "Per-environment command grid formatted as "
+        "vx_min,vx_max,vx_count,wz_min,wz_max,wz_count."
+    ),
+)
+parser.add_argument(
+    "--required_task_grid",
+    type=str,
+    default="",
+    help=(
+        "Comma-separated TACTIC task-slot ids assigned cyclically across "
+        "evaluation environments."
+    ),
+)
+parser.add_argument(
+    "--required_task_sets",
+    type=str,
+    default="",
+    help=(
+        "Semicolon-separated task sets assigned cyclically across environments; "
+        "use '+' inside each set, for example '0+3+5;1+4+6'."
+    ),
+)
+parser.add_argument(
+    "--force_curriculum_level",
+    type=int,
+    default=None,
+    help="Optional TACTIC curriculum level used with a required-task override.",
+)
+parser.add_argument(
+    "--force_motion_skill",
+    type=int,
+    default=None,
+    help="Diagnostic TACTIC motion-skill id in the range 0..3.",
+)
+parser.add_argument(
+    "--ablation",
+    choices=(
+        "none",
+        "fixed_task",
+        "fixed_skill",
+        "no_relational_state",
+        "no_predictive_models",
+        "no_control_objective",
+        "no_payload_option_barrier",
+        "no_payload_relation_authority",
+    ),
+    default="none",
+    help="Evaluation-only TACTIC mechanism ablation.",
+)
+parser.add_argument(
+    "--fixed_skill_id",
+    type=int,
+    default=0,
+    help="Shared skill id used by the fixed_skill ablation (0..11).",
+)
+parser.add_argument(
+    "--force_support_gate",
+    type=float,
+    default=None,
+    help="Diagnostic TACTIC support-skill gate override in [0,1].",
+)
+parser.add_argument(
+    "--stance_overrides",
+    type=str,
+    default="",
+    help="Semicolon-separated JOINT=v1,v2 sweeps; singleton values are broadcast.",
+)
+parser.add_argument(
+    "--wheel_pattern_grid",
+    type=float,
+    default=None,
+    help=(
+        "Diagnostic override magnitude for four interleaved wheel patterns: "
+        "++++, +-+-, -+-+, and ----."
+    ),
+)
+parser.add_argument(
+    "--wheel_sign_grid",
+    type=float,
+    default=None,
+    help=(
+        "Diagnostic override magnitude for all sixteen signed four-wheel "
+        "patterns. Patterns are assigned cyclically across environments."
+    ),
+)
+parser.add_argument(
+    "--wheel_amplitude_grid",
+    type=str,
+    default="",
+    help=(
+        "Comma-separated equal-wheel action amplitudes assigned cyclically "
+        "across environments for actuator-response identification."
+    ),
+)
+parser.add_argument(
+    "--fixed_wheel_actions",
+    type=str,
+    default="",
+    help="Diagnostic wheel-action override formatted as FL,FR,RL,RR.",
+)
+parser.add_argument(
+    "--wheel_action_scale_override",
+    type=float,
+    default=None,
+    help="Evaluation-only TACTIC wheel kinematic scale.",
+)
+parser.add_argument(
+    "--wheel_breakaway_override",
+    type=float,
+    default=None,
+    help="Evaluation-only TACTIC wheel breakaway action.",
+)
+parser.add_argument(
+    "--wheel_action_limit_override",
+    type=float,
+    default=None,
+    help="Evaluation-only TACTIC wheel action limit.",
+)
+parser.add_argument(
+    "--gripper_stiffness_override",
+    type=float,
+    default=None,
+    help="Evaluation-only gripper actuator stiffness.",
+)
+parser.add_argument(
+    "--gripper_damping_override",
+    type=float,
+    default=None,
+    help="Evaluation-only gripper actuator damping.",
+)
+parser.add_argument(
+    "--grasp_orientation_weight_override",
+    type=float,
+    default=None,
+    help="Evaluation-only grasp-orientation CLF weight.",
+)
+parser.add_argument(
+    "--release_target_radius_override",
+    type=float,
+    default=None,
+    help="Evaluation-only TACTIC release-phase activation radius.",
+)
+parser.add_argument(
+    "--interaction_phase_prior_gain_override",
+    type=float,
+    default=None,
+    help="Evaluation-only gain for the learned interaction-phase prior.",
+)
+parser.add_argument("--agent", type=str, default="rsl_rl_cfg_entry_point")
+parser.add_argument("--seed", type=int, default=None)
+cli_args.add_rsl_rl_args(parser)
+AppLauncher.add_app_launcher_args(parser)
+args_cli, hydra_args = parser.parse_known_args()
+if not args_cli.checkpoint:
+    parser.error("--checkpoint is required")
+if args_cli.video:
+    args_cli.enable_cameras = True
+
+sys.argv = [sys.argv[0]] + hydra_args
+
+app_launcher = AppLauncher(args_cli)
+simulation_app = app_launcher.app
+
+import os  # noqa: E402
+import time  # noqa: E402
+
+import gymnasium as gym  # noqa: E402
+import torch  # noqa: E402
+from rsl_rl.runners import DistillationRunner, OnPolicyRunner  # noqa: E402
+
+from isaaclab.envs import (  # noqa: E402
+    DirectMARLEnv,
+    DirectMARLEnvCfg,
+    DirectRLEnvCfg,
+    ManagerBasedRLEnvCfg,
+    multi_agent_to_single_agent,
+)
+from isaaclab.utils.assets import retrieve_file_path  # noqa: E402
+from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper  # noqa: E402
+from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
+
+import isaaclab_tasks  # noqa: F401,E402
+import quadruped_arm.tasks  # noqa: F401,E402
+try:
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_hierarchical_actor_critic import (  # noqa: E402
+        LRHierarchicalActorCritic,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_hierarchical_ppo import (  # noqa: E402
+        LRHierarchicalPPO,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_deep_hierarchical_actor_critic import (  # noqa: E402
+        LRDeepHierarchicalActorCritic,
+    )
+    from quadruped_arm.tasks.manager_based.LR_HRL.agents.lr_deep_hierarchical_ppo import (  # noqa: E402
+        LRDeepHierarchicalPPO,
+    )
+except ModuleNotFoundError:
+    LRHierarchicalActorCritic = None
+    LRHierarchicalPPO = None
+    LRDeepHierarchicalActorCritic = None
+    LRDeepHierarchicalPPO = None
+
+try:
+    from quadruped_arm.tasks.manager_based.TACTIC_HRL.agents import (  # noqa: E402
+        TACTICActorCritic,
+        TACTICPPO,
+    )
+    from quadruped_arm.tasks.manager_based.TACTIC_HRL.agents.tactic_checkpoint import (  # noqa: E402
+        load_zyb_baseline_physical as load_tactic_zyb_baseline_physical,
+    )
+    from quadruped_arm.tasks.manager_based.TACTIC_HRL.tactic_layout import (  # noqa: E402
+        ACTION_LAYOUT as TACTIC_ACTION_LAYOUT,
+        CLF_DECREASE_INDEX as TACTIC_CLF_DECREASE_INDEX,
+        DISTURBANCE_QUALITY_INDEX as TACTIC_DISTURBANCE_QUALITY_INDEX,
+        EXECUTED_SKILL_INDEX as TACTIC_EXECUTED_SKILL_INDEX,
+        GLOBAL_CONTEXT_DIM as TACTIC_GLOBAL_CONTEXT_DIM,
+        INTERACTION_SKILL_COUNT as TACTIC_INTERACTION_SKILL_COUNT,
+        MORPHOLOGY_SLICE as TACTIC_MORPHOLOGY_SLICE,
+        MOTION_SKILL_COUNT as TACTIC_MOTION_SKILL_COUNT,
+        PREVIEW_MARGIN_INDEX as TACTIC_PREVIEW_MARGIN_INDEX,
+        RELEASE_HOVER_HEIGHT as TACTIC_RELEASE_HOVER_HEIGHT,
+        RELEASE_TARGET_RADIUS as TACTIC_RELEASE_TARGET_RADIUS,
+        RELEASE_VERTICAL_TOLERANCE as TACTIC_RELEASE_VERTICAL_TOLERANCE,
+        SAFETY_MARGIN_INDEX as TACTIC_SAFETY_MARGIN_INDEX,
+        TASK_SLOT_AVAILABLE_INDEX as TACTIC_TASK_SLOT_AVAILABLE_INDEX,
+        TASK_SLOT_CARRYING_INDEX as TACTIC_TASK_SLOT_CARRYING_INDEX,
+        TASK_SLOT_COMPLETED_INDEX as TACTIC_TASK_SLOT_COMPLETED_INDEX,
+        TASK_SLOT_COUNT as TACTIC_TASK_SLOT_COUNT,
+        TASK_SLOT_DELIVERY_TYPE_INDEX as TACTIC_TASK_SLOT_DELIVERY_TYPE_INDEX,
+        TASK_SLOT_DISTANCE_INDEX as TACTIC_TASK_SLOT_DISTANCE_INDEX,
+        TASK_SLOT_FEATURE_DIM as TACTIC_TASK_SLOT_FEATURE_DIM,
+        TASK_SLOT_HEADING_INDEX as TACTIC_TASK_SLOT_HEADING_INDEX,
+        TASK_SLOT_INTERACTION_STATE_SLICE as TACTIC_TASK_SLOT_INTERACTION_STATE_SLICE,
+        TASK_SLOT_REQUIRED_INDEX as TACTIC_TASK_SLOT_REQUIRED_INDEX,
+        TASK_SLOT_TARGET_DELTA_SLICE as TACTIC_TASK_SLOT_TARGET_DELTA_SLICE,
+    )
+except ModuleNotFoundError:
+    TACTICActorCritic = None
+    TACTICPPO = None
+    load_tactic_zyb_baseline_physical = None
+    TACTIC_ACTION_LAYOUT = None
+    TACTIC_CLF_DECREASE_INDEX = None
+    TACTIC_DISTURBANCE_QUALITY_INDEX = None
+    TACTIC_EXECUTED_SKILL_INDEX = None
+    TACTIC_GLOBAL_CONTEXT_DIM = None
+    TACTIC_INTERACTION_SKILL_COUNT = None
+    TACTIC_MORPHOLOGY_SLICE = None
+    TACTIC_MOTION_SKILL_COUNT = None
+    TACTIC_PREVIEW_MARGIN_INDEX = None
+    TACTIC_RELEASE_HOVER_HEIGHT = None
+    TACTIC_RELEASE_TARGET_RADIUS = None
+    TACTIC_RELEASE_VERTICAL_TOLERANCE = None
+    TACTIC_SAFETY_MARGIN_INDEX = None
+    TACTIC_TASK_SLOT_AVAILABLE_INDEX = None
+    TACTIC_TASK_SLOT_CARRYING_INDEX = None
+    TACTIC_TASK_SLOT_COMPLETED_INDEX = None
+    TACTIC_TASK_SLOT_COUNT = None
+    TACTIC_TASK_SLOT_DELIVERY_TYPE_INDEX = None
+    TACTIC_TASK_SLOT_DISTANCE_INDEX = None
+    TACTIC_TASK_SLOT_FEATURE_DIM = None
+    TACTIC_TASK_SLOT_HEADING_INDEX = None
+    TACTIC_TASK_SLOT_INTERACTION_STATE_SLICE = None
+    TACTIC_TASK_SLOT_REQUIRED_INDEX = None
+    TACTIC_TASK_SLOT_TARGET_DELTA_SLICE = None
+
+import rsl_rl.runners.on_policy_runner as rsl_on_policy_runner  # noqa: E402
+
+for class_name, class_type in (
+    ("LRHierarchicalActorCritic", LRHierarchicalActorCritic),
+    ("LRHierarchicalPPO", LRHierarchicalPPO),
+    ("LRDeepHierarchicalActorCritic", LRDeepHierarchicalActorCritic),
+    ("LRDeepHierarchicalPPO", LRDeepHierarchicalPPO),
+    ("TACTICActorCritic", TACTICActorCritic),
+    ("TACTICPPO", TACTICPPO),
+):
+    if class_type is not None:
+        setattr(rsl_on_policy_runner, class_name, class_type)
+
+
+def _as_float(value):
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, (int, float)):
+        if math.isfinite(float(value)):
+            return float(value)
+        return None
+    if torch.is_tensor(value):
+        if value.numel() == 0:
+            return None
+        tensor = value.detach()
+        if tensor.dtype == torch.bool:
+            tensor = tensor.float()
+        else:
+            tensor = tensor.float()
+        return float(tensor.mean().cpu().item())
+    return None
+
+
+def _flatten_numeric(prefix, value, out):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_prefix = str(key) if not prefix else prefix + "/" + str(key)
+            _flatten_numeric(child_prefix, child, out)
+        return
+    number = _as_float(value)
+    if number is not None:
+        out[prefix] = number
+
+
+def _flatten_leaves(prefix, value, out):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_prefix = str(key) if not prefix else prefix + "/" + str(key)
+            _flatten_leaves(child_prefix, child, out)
+        return
+    out[prefix] = value
+
+
+def _value_at_env(value, env_index):
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, (int, float)):
+        number = float(value)
+        return number if math.isfinite(number) else None
+    if not torch.is_tensor(value) or value.numel() == 0:
+        return None
+    tensor = value.detach()
+    if tensor.ndim > 0:
+        if env_index >= tensor.shape[0]:
+            return None
+        tensor = tensor[env_index]
+    if tensor.numel() != 1:
+        tensor = tensor.float().mean()
+    elif tensor.dtype == torch.bool:
+        tensor = tensor.float()
+    else:
+        tensor = tensor.float()
+    number = float(tensor.cpu().item())
+    return number if math.isfinite(number) else None
+
+
+def _command_metric_leaves(env):
+    manager = getattr(env.unwrapped, "command_manager", None)
+    if manager is None:
+        return {}
+    term_names = getattr(manager, "active_terms", None)
+    if term_names is None:
+        terms = getattr(manager, "_terms", {})
+        term_names = terms.keys() if isinstance(terms, dict) else []
+    leaves = {}
+    for term_name in term_names:
+        try:
+            term = manager.get_term(term_name)
+        except (AttributeError, KeyError):
+            continue
+        metrics = getattr(term, "metrics", None)
+        if not isinstance(metrics, dict):
+            continue
+        _flatten_leaves("Command/" + str(term_name), metrics, leaves)
+    return leaves
+
+
+def _tactic_object_event_leaves(env):
+    manager = getattr(env.unwrapped, "command_manager", None)
+    if manager is None:
+        return {}
+    try:
+        term = manager.get_term("locomotion")
+    except (AttributeError, KeyError):
+        return {}
+
+    event_names = (
+        "object_contact",
+        "object_contact_memory",
+        "object_lift",
+        "object_lift_memory",
+        "object_transport",
+        "object_transport_memory",
+        "object_place",
+        "object_carrying",
+        "object_carry_memory",
+        "object_release_readiness",
+        "object_release_event",
+        "object_release_event_quality",
+        "object_drop_event",
+        "object_completion",
+        "object_contact_symmetry",
+    )
+    leaves = {}
+    event_tensors = {}
+    for name in event_names:
+        value = getattr(term, name, None)
+        if not torch.is_tensor(value) or value.ndim != 2:
+            continue
+        event_tensors[name] = value
+        for object_id in range(value.shape[1]):
+            leaves[
+                "Diagnostic/TACTIC/object_{}/{}".format(object_id, name)
+            ] = value[:, object_id]
+
+    object_positions = getattr(term, "_object_positions", None)
+    tcp_position = getattr(term, "tcp_pos_w", None)
+    if callable(object_positions) and torch.is_tensor(tcp_position):
+        positions = object_positions()
+        if (
+            torch.is_tensor(positions)
+            and positions.ndim == 3
+            and positions.shape[-1] == 3
+        ):
+            tcp_distance = torch.linalg.vector_norm(
+                positions - tcp_position.unsqueeze(1), dim=-1
+            )
+            for object_id in range(tcp_distance.shape[1]):
+                leaves[
+                    "Diagnostic/TACTIC/object_{}/tcp_distance".format(
+                        object_id
+                    )
+                ] = tcp_distance[:, object_id]
+
+    carrying = event_tensors.get("object_carrying")
+    if carrying is not None:
+        carrying_float = carrying.float()
+        carrying_id = torch.argmax(carrying_float, dim=1).float()
+        carrying_id = torch.where(
+            carrying_float.amax(dim=1) > 0.5,
+            carrying_id,
+            carrying_id.new_full(carrying_id.shape, -1.0),
+        )
+        leaves["Diagnostic/TACTIC/carrying_object_id"] = carrying_id
+
+    contact = event_tensors.get("object_contact_memory")
+    lift = event_tensors.get("object_lift_memory")
+    transport = event_tensors.get("object_transport_memory")
+    place = event_tensors.get("object_place")
+    if all(value is not None for value in (contact, lift, transport, place)):
+        event_score = (
+            0.16 * contact
+            + 0.24 * lift
+            + 0.25 * transport
+            + 0.35 * place
+        )
+        leaves["Diagnostic/TACTIC/physical_event_object_id"] = torch.argmax(
+            event_score, dim=1
+        ).float()
+        leaves["Diagnostic/TACTIC/physical_event_score"] = event_score.amax(
+            dim=1
+        )
+    return leaves
+
+
+def _termination_leaves(env):
+    manager = getattr(env.unwrapped, "termination_manager", None)
+    if manager is None:
+        return {}
+    leaves = {}
+    for name in getattr(manager, "active_terms", ()):
+        try:
+            value = manager.get_term(name)
+        except (AttributeError, KeyError):
+            continue
+        if torch.is_tensor(value):
+            leaves["Termination/" + str(name)] = value.float()
+    time_outs = getattr(manager, "time_outs", None)
+    terminated = getattr(manager, "terminated", None)
+    if torch.is_tensor(time_outs):
+        leaves["Termination/time_out_any"] = time_outs.float()
+    if torch.is_tensor(terminated):
+        success = leaves.get("Termination/mission_success")
+        if torch.is_tensor(success):
+            terminated = terminated & ~(success > 0.5)
+        leaves["Termination/failure_any"] = terminated.float()
+    return leaves
+
+
+def _derived_safety_leaves(leaves):
+    derived = {}
+    specifications = (
+        (
+            "Command/locomotion/TACTIC/cbf_margin",
+            "Safety/cbf_violation",
+            "low",
+            0.02,
+        ),
+        (
+            "Command/locomotion/TACTIC/predicted_margin",
+            "Safety/preview_violation",
+            "low",
+            0.02,
+        ),
+        (
+            "Command/locomotion/TACTIC/base_tilt",
+            "Safety/tilt_violation",
+            "high",
+            0.60,
+        ),
+        (
+            "Command/locomotion/TACTIC/support_count",
+            "Safety/support_loss",
+            "low",
+            2.5,
+        ),
+    )
+    for source, target, direction, threshold in specifications:
+        value = leaves.get(source)
+        if not torch.is_tensor(value):
+            continue
+        if direction == "low":
+            derived[target] = (value < threshold).float()
+        else:
+            derived[target] = (value > threshold).float()
+    return derived
+
+
+def _compact_evaluation_leaves(leaves):
+    command_names = {
+        "mission_completion",
+        "mission_completion_delta",
+        "mission_success",
+        "task_progress",
+        "task_progress_delta",
+        "task_error",
+        "ee_error",
+        "tcp_object_distance",
+        "object_target_distance",
+        "cbf_margin",
+        "predicted_margin",
+        "clf_decrease",
+        "disturbance_estimate",
+        "base_height",
+        "base_tilt",
+        "control_recovery_pressure",
+        "control_recovery_active",
+        "control_recovery_constraint_active",
+        "recovery_task_executed",
+        "recovery_task_probability",
+        "executed_task_probability",
+        "task_constraint_projection",
+        "recovery_latch_seen",
+        "recovery_valid_seen",
+        "recovery_pressure_seen",
+        "payload_posture_projection",
+        "payload_relation_violation",
+        "base_vx",
+        "base_vy",
+        "base_wz",
+        "command_vx",
+        "command_vy",
+        "command_wz",
+        "support_count",
+        "gripper_closure",
+        "required_task_count",
+        "object_completion_mean",
+        "object_contact_mean",
+        "object_lift_mean",
+        "object_transport_mean",
+        "object_carrying_mean",
+        "object_carry_memory_mean",
+        "object_release_readiness_mean",
+        "object_release_readiness_delta_mean",
+        "object_release_event_mean",
+        "object_drop_event_mean",
+        "object_gripper_distance_mean",
+        "capture_staging_distance",
+        "capture_heading_error",
+        "capture_initiation_margin",
+        "selected_delivery_side",
+        "task_id",
+        "skill_id",
+        "effective_object_id",
+        "selected_object_contact",
+        "selected_object_lift",
+        "selected_object_transport",
+        "selected_object_place",
+        "selected_object_completion",
+        "selected_object_carrying",
+        "selected_object_carry_memory",
+        "selected_object_target_progress",
+        "selected_object_target_progress_delta",
+        "selected_object_release_readiness",
+        "selected_object_release_readiness_delta",
+        "selected_object_release_event",
+        "selected_object_drop_event",
+        "selected_object_gripper_distance",
+        "selected_object_place_error_xy",
+        "selected_object_place_error_z",
+        "task_switch",
+        "skill_switch",
+        "task_age",
+        "skill_age",
+        "task_hazard",
+        "skill_hazard",
+        "task_entropy",
+        "skill_entropy",
+        "task_termination_probability",
+        "skill_termination_probability",
+    }
+    object_event_suffixes = {
+        "object_contact",
+        "object_contact_memory",
+        "object_lift_memory",
+        "object_transport_memory",
+        "object_carrying",
+        "object_carry_memory",
+        "object_release_readiness",
+        "object_release_event",
+        "object_release_event_quality",
+        "object_drop_event",
+        "object_completion",
+        "object_contact_symmetry",
+    }
+    compact = {}
+    command_prefix = "Command/locomotion/TACTIC/"
+    for key, value in leaves.items():
+        if key.startswith(command_prefix):
+            if key[len(command_prefix) :] in command_names:
+                compact[key] = value
+            continue
+        if key.startswith("Diagnostic/TACTIC/object_"):
+            if key.rsplit("/", 1)[-1] in object_event_suffixes:
+                compact[key] = value
+            continue
+        if key.startswith(
+            (
+                "Tracking/",
+                "Safety/",
+                "Termination/",
+                "Actor/",
+            )
+        ):
+            compact[key] = value
+            continue
+        if key.startswith("State/") and (
+            key
+            in {
+                "State/base_vx",
+                "State/base_vy",
+                "State/base_vz",
+                "State/base_wx",
+                "State/base_wy",
+                "State/base_wz",
+                "State/base_gravity_x",
+                "State/base_gravity_y",
+                "State/base_tilt",
+                "State/front_support_count",
+                "State/rear_support_count",
+                "State/rear_contact_fraction",
+                "State/rear_any_airborne",
+                "State/rear_both_airborne",
+                "State/all_feet_airborne",
+            }
+            or key.startswith(
+                (
+                    "State/object_",
+                    "State/tcp_",
+                    "State/goal_",
+                    "State/finger_left_",
+                    "State/finger_right_",
+                    "State/wheel_",
+                )
+            )
+            or key.endswith("_contact")
+            or key.endswith("_contact_force")
+        ):
+            compact[key] = value
+            continue
+        if key.startswith(
+            ("Diagnostic/required_task_", "Diagnostic/wheel_")
+        ):
+            compact[key] = value
+    return compact
+
+
+def _physical_state_leaves(env):
+    base_env = env.unwrapped
+    robot = base_env.scene["robot"]
+    lin_vel = robot.data.root_lin_vel_b
+    ang_vel = robot.data.root_ang_vel_b
+    command_term = base_env.command_manager.get_term("locomotion")
+    command = getattr(command_term, "_command", None)
+    if not torch.is_tensor(command):
+        command = getattr(command_term, "vel_command_b", None)
+    leaves = {
+        "State/base_vx": lin_vel[:, 0],
+        "State/base_vy": lin_vel[:, 1],
+        "State/base_vz": lin_vel[:, 2],
+        "State/base_wx": ang_vel[:, 0],
+        "State/base_wy": ang_vel[:, 1],
+        "State/base_wz": ang_vel[:, 2],
+    }
+    projected_gravity = getattr(robot.data, "projected_gravity_b", None)
+    if torch.is_tensor(projected_gravity) and projected_gravity.shape[1] >= 2:
+        leaves["State/base_gravity_x"] = projected_gravity[:, 0]
+        leaves["State/base_gravity_y"] = projected_gravity[:, 1]
+        leaves["State/base_tilt"] = torch.asin(
+            torch.linalg.vector_norm(projected_gravity[:, :2], dim=1).clamp(0.0, 1.0)
+        )
+
+    wheel_names = ("FL", "FR", "RL", "RR")
+    wheel_joint_ids = getattr(base_env, "_evaluation_wheel_joint_ids", None)
+    if wheel_joint_ids is None:
+        joint_ids, _ = robot.find_joints(
+            [
+                "FL_foot_wheel_joint",
+                "FR_foot_wheel_joint",
+                "RL_foot_wheel_joint",
+                "RR_foot_wheel_joint",
+            ],
+            preserve_order=True,
+        )
+        wheel_joint_ids = tuple(int(index) for index in joint_ids)
+        base_env._evaluation_wheel_joint_ids = wheel_joint_ids
+    if len(wheel_joint_ids) == 4:
+        wheel_joint_vel = robot.data.joint_vel[:, wheel_joint_ids]
+        for wheel_id, wheel_name in enumerate(wheel_names):
+            leaves[f"State/wheel_{wheel_name}_vel"] = wheel_joint_vel[:, wheel_id]
+
+        for data_attr, metric_suffix in (
+            ("joint_vel_target", "vel_target"),
+            ("joint_effort_target", "effort_target"),
+            ("applied_torque", "applied_torque"),
+        ):
+            tensor = getattr(robot.data, data_attr, None)
+            if torch.is_tensor(tensor) and tensor.ndim >= 2:
+                selected = tensor[:, wheel_joint_ids]
+                for wheel_id, wheel_name in enumerate(wheel_names):
+                    leaves[f"State/wheel_{wheel_name}_{metric_suffix}"] = selected[:, wheel_id]
+
+        for env_attr, metric_prefix in (
+            ("safe_wheel_feedforward", "wheel_feedforward"),
+            ("safe_wheel_residual", "wheel_residual"),
+            ("safe_wheel_target", "wheel_target"),
+            ("safe_wheel_actual_velocity", "wheel_actual_velocity"),
+            ("safe_wheel_brake_target", "wheel_brake_target"),
+            ("safe_wheel_speed_brake", "wheel_speed_brake"),
+            ("safe_wheel_torque_feedforward", "wheel_torque_feedforward"),
+            ("safe_wheel_torque_residual", "wheel_torque_residual"),
+            ("safe_wheel_torque_target", "wheel_torque_target"),
+            ("safe_wheel_torque_speed_reference", "wheel_speed_reference"),
+        ):
+            tensor = getattr(base_env, env_attr, None)
+            if torch.is_tensor(tensor) and tensor.ndim >= 2 and tensor.shape[1] >= 4:
+                for wheel_id, wheel_name in enumerate(wheel_names):
+                    leaves[f"State/{metric_prefix}_{wheel_name}"] = tensor[:, wheel_id]
+            elif torch.is_tensor(tensor) and tensor.ndim == 1:
+                leaves[f"State/{metric_prefix}"] = tensor
+        wz_reference = getattr(base_env, "safe_wheel_torque_wz_reference", None)
+        if torch.is_tensor(wz_reference):
+            leaves["State/wheel_torque_wz_reference"] = wz_reference
+    gripper_joint_ids = getattr(
+        base_env, "_evaluation_gripper_joint_ids", None
+    )
+    if gripper_joint_ids is None:
+        joint_ids, _ = robot.find_joints(
+            ["joint7", "joint8"], preserve_order=True
+        )
+        gripper_joint_ids = tuple(int(index) for index in joint_ids)
+        base_env._evaluation_gripper_joint_ids = gripper_joint_ids
+    if len(gripper_joint_ids) == 2:
+        joint_pos = robot.data.joint_pos[:, gripper_joint_ids]
+        joint_vel = robot.data.joint_vel[:, gripper_joint_ids]
+        leaves["State/gripper_left_pos"] = joint_pos[:, 0]
+        leaves["State/gripper_right_pos"] = joint_pos[:, 1]
+        leaves["State/gripper_left_vel"] = joint_vel[:, 0]
+        leaves["State/gripper_right_vel"] = joint_vel[:, 1]
+        joint_target = getattr(robot.data, "joint_pos_target", None)
+        if torch.is_tensor(joint_target):
+            leaves["State/gripper_left_target"] = joint_target[
+                :, gripper_joint_ids[0]
+            ]
+            leaves["State/gripper_right_target"] = joint_target[
+                :, gripper_joint_ids[1]
+            ]
+        applied_torque = getattr(robot.data, "applied_torque", None)
+        if torch.is_tensor(applied_torque):
+            leaves["State/gripper_left_torque"] = applied_torque[
+                :, gripper_joint_ids[0]
+            ]
+            leaves["State/gripper_right_torque"] = applied_torque[
+                :, gripper_joint_ids[1]
+            ]
+    command_term = base_env.command_manager.get_term("locomotion")
+    hierarchy = getattr(base_env, "tactic_hierarchy", None)
+    finger_body_ids = getattr(command_term, "_finger_body_ids", None)
+    object_positions = getattr(command_term, "_object_positions", None)
+    if (
+        hierarchy is not None
+        and torch.is_tensor(finger_body_ids)
+        and callable(object_positions)
+    ):
+        rows = torch.arange(
+            base_env.num_envs, device=base_env.device
+        )
+        task_id = hierarchy.task_id
+        object_id = hierarchy.object_id
+        delivery = (task_id >= 5) & (task_id <= 10)
+        selected_object = torch.where(
+            delivery, task_id - 5, object_id
+        ).clamp(0, 5)
+        object_pos = object_positions()[rows, selected_object]
+        finger_pos = robot.data.body_pos_w[:, finger_body_ids]
+        tcp_pos = getattr(command_term, "tcp_pos_w", None)
+        goal_pos = getattr(command_term, "curr_goal_pos_w", None)
+        for axis, axis_id in zip(("x", "y", "z"), range(3)):
+            leaves[f"State/object_{axis}"] = object_pos[:, axis_id]
+            leaves[f"State/finger_left_{axis}"] = finger_pos[
+                :, 0, axis_id
+            ]
+            leaves[f"State/finger_right_{axis}"] = finger_pos[
+                :, 1, axis_id
+            ]
+            if torch.is_tensor(tcp_pos):
+                leaves[f"State/tcp_{axis}"] = tcp_pos[:, axis_id]
+            if torch.is_tensor(goal_pos):
+                leaves[f"State/goal_{axis}"] = goal_pos[:, axis_id]
+    if "contact_forces" in base_env.scene.keys():
+        contact_sensor = base_env.scene["contact_forces"]
+        body_names = list(getattr(contact_sensor, "body_names", ()))
+        net_forces = getattr(contact_sensor.data, "net_forces_w", None)
+        if torch.is_tensor(net_forces):
+            foot_names = ("FL_foot", "FR_foot", "RL_foot", "RR_foot")
+            if all(name in body_names for name in foot_names):
+                foot_ids = [body_names.index(name) for name in foot_names]
+                foot_force = torch.norm(net_forces[:, foot_ids], dim=-1)
+                foot_contact = foot_force > 1.5
+                for foot_id, name in enumerate(("FL", "FR", "RL", "RR")):
+                    leaves[f"State/{name}_contact_force"] = foot_force[
+                        :, foot_id
+                    ]
+                    leaves[f"State/{name}_contact"] = foot_contact[
+                        :, foot_id
+                    ].float()
+                front_support = foot_contact[:, :2].float().sum(dim=1)
+                rear_support = foot_contact[:, 2:].float().sum(dim=1)
+                leaves["State/front_support_count"] = front_support
+                leaves["State/rear_support_count"] = rear_support
+                leaves["State/rear_contact_fraction"] = rear_support / 2.0
+                leaves["State/rear_any_airborne"] = (
+                    rear_support < 2.0
+                ).float()
+                leaves["State/rear_both_airborne"] = (
+                    rear_support < 0.5
+                ).float()
+                leaves["State/all_feet_airborne"] = (
+                    front_support + rear_support < 0.5
+                ).float()
+            for side, body_name in (
+                ("left", "link7"),
+                ("right", "link8"),
+            ):
+                if body_name in body_names:
+                    body_id = body_names.index(body_name)
+                    leaves[f"State/finger_{side}_contact_force"] = (
+                        torch.norm(net_forces[:, body_id], dim=-1)
+                    )
+    action_manager = getattr(base_env, "action_manager", None)
+    if action_manager is not None:
+        try:
+            gripper_action = action_manager.get_term("gripper")
+        except (AttributeError, KeyError):
+            gripper_action = None
+        if gripper_action is not None:
+            raw_action = getattr(gripper_action, "raw_actions", None)
+            processed_action = getattr(
+                gripper_action, "processed_actions", None
+            )
+            if torch.is_tensor(raw_action):
+                leaves["Action/gripper_logit"] = raw_action[:, 0]
+            if (
+                torch.is_tensor(processed_action)
+                and processed_action.shape[1] >= 2
+            ):
+                leaves["Action/gripper_left_target"] = processed_action[:, 0]
+                leaves["Action/gripper_right_target"] = processed_action[:, 1]
+    if torch.is_tensor(command) and command.shape == lin_vel.shape:
+        leaves["Command/base_vx"] = command[:, 0]
+        leaves["Command/base_vy"] = command[:, 1]
+        leaves["Command/base_wz"] = command[:, 2]
+        leaves["Tracking/base_xy_error"] = torch.linalg.vector_norm(
+            lin_vel[:, :2] - command[:, :2], dim=-1
+        )
+        leaves["Tracking/base_vx_error"] = (lin_vel[:, 0] - command[:, 0]).abs()
+        leaves["Tracking/base_vy_error"] = (lin_vel[:, 1] - command[:, 1]).abs()
+        leaves["Tracking/base_wz_error"] = (ang_vel[:, 2] - command[:, 2]).abs()
+    return leaves
+
+
+def _apply_gripper_diagnostic_override(env, target):
+    if target is None:
+        return
+    manager = getattr(env.unwrapped, "command_manager", None)
+    if manager is None:
+        return
+    try:
+        term = manager.get_term("locomotion")
+    except (AttributeError, KeyError):
+        return
+    gripper_target = getattr(term, "_gripper_target", None)
+    write_target = getattr(term, "_write_gripper_target_to_sim", None)
+    if torch.is_tensor(gripper_target) and callable(write_target):
+        gripper_target.fill_(float(max(0.0, min(1.0, target))))
+        write_target()
+
+
+def _parse_float_list(value):
+    if not value.strip():
+        return []
+    return [float(item.strip()) for item in value.split(",") if item.strip()]
+
+
+def _parse_fixed_base_command(value):
+    if not value.strip():
+        return None
+    command = _parse_float_list(value)
+    if len(command) != 3:
+        raise ValueError("--fixed_base_command must contain exactly vx,vy,wz")
+    return tuple(command)
+
+
+def _parse_base_command_grid(value, num_envs, device, dtype):
+    if not value.strip():
+        return None
+    values = _parse_float_list(value)
+    if len(values) != 6:
+        raise ValueError(
+            "--base_command_grid must contain "
+            "vx_min,vx_max,vx_count,wz_min,wz_max,wz_count"
+        )
+    vx_count = int(values[2])
+    wz_count = int(values[5])
+    if vx_count < 1 or wz_count < 1:
+        raise ValueError("Command-grid counts must be positive")
+    vx = torch.linspace(
+        values[0], values[1], vx_count, device=device, dtype=dtype
+    )
+    wz = torch.linspace(
+        values[3], values[4], wz_count, device=device, dtype=dtype
+    )
+    pairs = torch.cartesian_prod(vx, wz)
+    grid = torch.zeros(pairs.shape[0], 3, device=device, dtype=dtype)
+    grid[:, 0] = pairs[:, 0]
+    grid[:, 2] = pairs[:, 1]
+    repeats = (int(num_envs) + grid.shape[0] - 1) // grid.shape[0]
+    return grid.repeat(repeats, 1)[: int(num_envs)]
+
+
+def _wheel_pattern_grid(num_envs, magnitude, device, dtype):
+    if magnitude is None:
+        return None, None
+    patterns = torch.tensor(
+        (
+            (1.0, 1.0, 1.0, 1.0),
+            (1.0, -1.0, 1.0, -1.0),
+            (-1.0, 1.0, -1.0, 1.0),
+            (-1.0, -1.0, -1.0, -1.0),
+        ),
+        device=device,
+        dtype=dtype,
+    )
+    pattern_ids = torch.arange(num_envs, device=device) % patterns.shape[0]
+    return patterns[pattern_ids] * float(magnitude), pattern_ids
+
+
+def _wheel_sign_grid(num_envs, magnitude, device, dtype):
+    if magnitude is None:
+        return None, None
+    patterns = torch.tensor(
+        [
+            tuple(
+                1.0 if pattern_id & (1 << wheel_id) else -1.0
+                for wheel_id in range(4)
+            )
+            for pattern_id in range(16)
+        ],
+        device=device,
+        dtype=dtype,
+    )
+    pattern_ids = torch.arange(num_envs, device=device) % patterns.shape[0]
+    return patterns[pattern_ids] * float(magnitude), pattern_ids
+
+
+def _wheel_amplitude_grid(value, num_envs, device, dtype):
+    amplitudes = _parse_float_list(value)
+    if not amplitudes:
+        return None, None, None
+    amplitude_values = torch.tensor(amplitudes, device=device, dtype=dtype)
+    amplitude_ids = (
+        torch.arange(num_envs, device=device) % amplitude_values.numel()
+    )
+    selected = amplitude_values[amplitude_ids]
+    return selected.unsqueeze(1).repeat(1, 4), amplitude_ids, selected
+
+
+def _fixed_wheel_actions(value, num_envs, device, dtype):
+    if not value.strip():
+        return None
+    values = _parse_float_list(value)
+    if len(values) != 4:
+        raise ValueError("--fixed_wheel_actions must contain FL,FR,RL,RR")
+    return torch.tensor(values, device=device, dtype=dtype).view(1, 4).repeat(
+        num_envs, 1
+    )
+
+
+def _required_task_grid(value, num_envs, device):
+    if not value.strip():
+        return None
+    task_ids = [int(part.strip()) for part in value.split(",") if part.strip()]
+    if not task_ids:
+        return None
+    if any(task_id < 0 or task_id >= 12 for task_id in task_ids):
+        raise ValueError("--required_task_grid ids must be between 0 and 11")
+    return torch.tensor(
+        [task_ids[index % len(task_ids)] for index in range(num_envs)],
+        device=device,
+        dtype=torch.long,
+    )
+
+
+def _required_task_sets(value, num_envs, device):
+    if not value.strip():
+        return None, None
+    parsed_sets = []
+    for raw_set in value.split(";"):
+        task_ids = [
+            int(part.strip())
+            for part in raw_set.split("+")
+            if part.strip()
+        ]
+        if not task_ids:
+            continue
+        if any(task_id < 0 or task_id >= 12 for task_id in task_ids):
+            raise ValueError("--required_task_sets ids must be between 0 and 11")
+        parsed_sets.append(tuple(dict.fromkeys(task_ids)))
+    if not parsed_sets:
+        return None, None
+    required = torch.zeros(num_envs, 12, device=device)
+    set_ids = torch.arange(num_envs, device=device) % len(parsed_sets)
+    for env_id in range(num_envs):
+        required[
+            env_id, list(parsed_sets[env_id % len(parsed_sets)])
+        ] = 1.0
+    return required, set_ids
+
+
+def _apply_required_tasks(
+    env, task_ids, required_task_sets, curriculum_level
+):
+    if task_ids is None and required_task_sets is None:
+        return
+    base_env = env.unwrapped
+    term = base_env.command_manager.get_term("locomotion")
+    required = getattr(term, "task_required", None)
+    completed = getattr(term, "task_completed", None)
+    available = getattr(term, "task_available", None)
+    if not all(
+        torch.is_tensor(value) for value in (required, completed, available)
+    ):
+        raise RuntimeError("TACTIC task ledger is unavailable")
+    required.zero_()
+    if required_task_sets is not None:
+        required.copy_(required_task_sets)
+    else:
+        required.scatter_(1, task_ids.view(-1, 1), 1.0)
+    if curriculum_level is not None:
+        if curriculum_level < 0 or curriculum_level > 4:
+            raise ValueError("--force_curriculum_level must be between 0 and 4")
+        term.curriculum_level.fill_(int(curriculum_level))
+    valid = required * (1.0 - completed) * available
+    no_valid = valid.sum(dim=1) < 0.5
+    valid[no_valid, 11] = 1.0
+    base_env.tactic_task_valid_mask = valid
+
+
+def _apply_fixed_base_command(env, command):
+    if command is None:
+        return
+    command_term = env.unwrapped.command_manager.get_term("locomotion")
+    command_tensor = getattr(command_term, "_command", None)
+    if not torch.is_tensor(command_tensor):
+        command_tensor = getattr(command_term, "vel_command_b", None)
+    if not torch.is_tensor(command_tensor) or command_tensor.shape[-1] != 3:
+        raise RuntimeError(
+            "locomotion command term does not expose a 3-D command tensor"
+        )
+    if torch.is_tensor(command):
+        values = command.to(
+            device=command_tensor.device, dtype=command_tensor.dtype
+        )
+        if values.shape != command_tensor.shape:
+            raise RuntimeError(
+                "Per-environment command grid does not match the environment"
+            )
+        command_tensor[:] = values
+    else:
+        command_tensor[:] = command_tensor.new_tensor(command).view(1, 3)
+    tau_up = getattr(command_term, "tau_up_packet", None)
+    if torch.is_tensor(tau_up) and tau_up.shape[-1] >= 14:
+        tau_up[:, 12] = command_tensor[:, 0]
+        tau_up[:, 13] = command_tensor[:, 2]
+    hierarchy_context = getattr(command_term, "hierarchy_context", None)
+    if torch.is_tensor(hierarchy_context) and hierarchy_context.shape[-1] >= 11:
+        hierarchy_context[:, 9] = command_tensor[:, 0]
+        hierarchy_context[:, 10] = command_tensor[:, 2]
+
+
+def _categorical_actor_diagnostics(prefix, probability, target):
+    """Return per-environment accuracy, calibration, and class coverage."""
+
+    target = target.clamp_min(0.0)
+    target = target / target.sum(dim=-1, keepdim=True).clamp_min(1.0e-6)
+    predicted_id = probability.argmax(dim=-1)
+    target_id = target.argmax(dim=-1)
+    predicted_one_hot = torch.nn.functional.one_hot(
+        predicted_id, num_classes=probability.shape[-1]
+    ).float()
+    target_one_hot = torch.nn.functional.one_hot(
+        target_id, num_classes=probability.shape[-1]
+    ).float()
+    valid_target = target > 1.0e-6
+    entropy_scale = max(math.log(float(probability.shape[-1])), 1.0e-6)
+    leaves = {
+        f"Actor/{prefix}_accuracy": (predicted_id == target_id).float(),
+        f"Actor/{prefix}_valid_hit": valid_target.gather(1, predicted_id.view(-1, 1)).squeeze(1).float(),
+        f"Actor/{prefix}_valid_mass": (probability * valid_target.float()).sum(dim=-1),
+        f"Actor/{prefix}_target_probability": (probability * target).sum(dim=-1),
+        f"Actor/{prefix}_confidence": probability.max(dim=-1).values,
+        f"Actor/{prefix}_entropy": (
+            -(probability * probability.clamp_min(1.0e-8).log()).sum(dim=-1) / entropy_scale
+        ),
+    }
+    for class_id in range(probability.shape[-1]):
+        leaves[f"Teacher/{prefix}_{class_id}_fraction"] = target[:, class_id]
+        leaves[f"Actor/{prefix}_{class_id}_fraction"] = predicted_one_hot[:, class_id]
+        leaves[f"Actor/{prefix}_{class_id}_correct"] = (
+            predicted_one_hot[:, class_id] * target_one_hot[:, class_id]
+        )
+    return leaves
+
+
+def _parse_stance_overrides(value):
+    sweeps = {}
+    for assignment in value.split(";"):
+        assignment = assignment.strip()
+        if not assignment:
+            continue
+        if "=" not in assignment:
+            raise ValueError("Each stance override must have the form JOINT=v1,v2")
+        name, values = assignment.split("=", 1)
+        parsed = _parse_float_list(values)
+        if not parsed:
+            raise ValueError(f"Stance override for {name.strip()} has no values")
+        sweeps[name.strip()] = parsed
+    return sweeps
+
+
+def _prepare_stance_override(env, front_thigh, front_calf, rear_thigh, rear_calf, joint_sweeps):
+    sweeps = {
+        "FL_thigh_joint": front_thigh,
+        "FR_thigh_joint": front_thigh,
+        "RL_thigh_joint": rear_thigh,
+        "RR_thigh_joint": rear_thigh,
+        "FL_calf_joint": front_calf,
+        "FR_calf_joint": front_calf,
+        "RL_calf_joint": rear_calf,
+        "RR_calf_joint": rear_calf,
+    }
+    sweeps = {name: values for name, values in sweeps.items() if values}
+    sweeps.update(joint_sweeps)
+    if not sweeps:
+        return None
+    lengths = [len(values) for values in sweeps.values()]
+    count = max(lengths)
+    if any(len(values) not in (1, count) for values in sweeps.values()):
+        raise ValueError("Stance offset lists must be singleton or have equal lengths")
+    manager = env.unwrapped.action_manager
+    term_names = list(manager.active_terms)
+    action_offset = 0
+    leg_term = None
+    for term_name in term_names:
+        term = manager.get_term(term_name)
+        if term_name == "leg_pos":
+            leg_term = term
+            break
+        action_offset += int(term.action_dim)
+    if leg_term is None:
+        raise RuntimeError("Rear stance override requires the leg_pos action term")
+    joint_names = list(sweeps)
+    local_by_name = {name: index for index, name in enumerate(leg_term._joint_names)}
+    missing = [name for name in joint_names if name not in local_by_name]
+    if missing:
+        raise RuntimeError(f"leg_pos action term is missing rear stance joints: {missing}")
+    local_ids = torch.tensor(
+        [local_by_name[name] for name in joint_names], device=env.unwrapped.device, dtype=torch.long
+    )
+    global_ids = local_ids + action_offset
+    repeats = (int(env.unwrapped.num_envs) + count - 1) // count
+    tensors = []
+    for values in sweeps.values():
+        expanded = values * count if len(values) == 1 else values
+        tensors.append(torch.tensor(expanded * repeats, device=env.unwrapped.device)[: env.unwrapped.num_envs])
+    offsets = torch.stack(tensors, dim=1)
+    scale = getattr(leg_term, "_scale", 1.0)
+    if torch.is_tensor(scale):
+        if scale.ndim > 1:
+            scale = scale[0]
+        scale = scale[local_ids].to(device=env.unwrapped.device, dtype=torch.float32)
+    else:
+        scale = torch.full((8,), float(scale), device=env.unwrapped.device)
+    raw_actions = offsets / scale.view(1, len(joint_names)).clamp_min(1.0e-6)
+    return global_ids, raw_actions
+
+
+def _apply_rear_stance_override(actions, override):
+    if override is None:
+        return
+    action_ids, raw_actions = override
+    actions[:, action_ids] = raw_actions
+
+
+def _accumulate_per_env(accumulator, key, value, num_envs):
+    if not torch.is_tensor(value) or value.numel() == 0 or value.shape[0] != num_envs:
+        return
+    values = value.detach().float()
+    if values.ndim > 1:
+        values = values.reshape(num_envs, -1).mean(dim=1)
+    values = values.cpu()
+    if key not in accumulator:
+        accumulator[key] = {
+            "sum": torch.zeros(num_envs),
+            "count": 0,
+            "last": torch.zeros(num_envs),
+            "min": torch.full((num_envs,), float("inf")),
+            "max": torch.full((num_envs,), -float("inf")),
+        }
+    accumulator[key]["sum"] += values
+    accumulator[key]["count"] += 1
+    accumulator[key]["last"] = values
+    accumulator[key]["min"] = torch.minimum(
+        accumulator[key]["min"], values
+    )
+    accumulator[key]["max"] = torch.maximum(
+        accumulator[key]["max"], values
+    )
+
+
+def _first_hit_event_name(key):
+    if key == "Command/locomotion/TACTIC/mission_success":
+        return "mission_success"
+    prefix = "Diagnostic/TACTIC/object_"
+    if not key.startswith(prefix):
+        return None
+    parts = key.split("/")
+    if len(parts) != 4:
+        return None
+    event = parts[-1]
+    aliases = {
+        "object_contact_memory": "contact",
+        "object_lift_memory": "lift",
+        "object_carrying": "carry",
+        "object_transport_memory": "transport",
+        "object_release_event": "release",
+        "object_completion": "completion",
+    }
+    if event not in aliases:
+        return None
+    object_id = parts[-2].removeprefix("object_")
+    return "object_{}_{}".format(object_id, aliases[event])
+
+
+def _update_first_hit_steps(first_hit_steps, leaves, step, num_envs):
+    for key, value in leaves.items():
+        event_name = _first_hit_event_name(key)
+        if event_name is None:
+            continue
+        if (
+            not torch.is_tensor(value)
+            or value.ndim == 0
+            or value.shape[0] != num_envs
+        ):
+            continue
+        active = value.detach().reshape(num_envs, -1).amax(dim=1) >= 0.5
+        if event_name not in first_hit_steps:
+            first_hit_steps[event_name] = torch.full(
+                (num_envs,),
+                -1,
+                dtype=torch.long,
+                device=active.device,
+            )
+        unseen = first_hit_steps[event_name] < 0
+        first_hit_steps[event_name][unseen & active] = int(step)
+
+
+def _write_per_env_csv(
+    path,
+    accumulator,
+    metadata,
+    num_envs,
+    per_env_fields=None,
+):
+    rows = []
+    for env_id in range(num_envs):
+        row = dict(metadata)
+        row["env_id"] = env_id
+        for key, stats in accumulator.items():
+            count = max(1, int(stats["count"]))
+            row[key + "__mean"] = float(stats["sum"][env_id].item() / count)
+            row[key + "__last"] = float(stats["last"][env_id].item())
+            row[key + "__min"] = float(stats["min"][env_id].item())
+            row[key + "__max"] = float(stats["max"][env_id].item())
+        for key, values in (per_env_fields or {}).items():
+            row[key] = float(values[env_id].item())
+        rows.append(row)
+    _write_rows_csv(path, rows)
+
+
+def _stats(values):
+    if not values:
+        return None, None, None, None, None
+    tensor = torch.tensor(values, dtype=torch.float32)
+    return (
+        float(tensor.mean().item()),
+        float(tensor.std(unbiased=False).item()),
+        float(tensor[-1].item()),
+        float(tensor.amin().item()),
+        float(tensor.amax().item()),
+    )
+
+
+def _write_csv(path, row):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fields = list(row.keys())
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerow(row)
+
+
+def _write_rows_csv(path, rows):
+    if not rows:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fields = []
+    seen = set()
+    for row in rows:
+        for key in row:
+            if key not in seen:
+                fields.append(key)
+                seen.add(key)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _tactic_ablation_observation(obs, ablation):
+    if ablation not in ("no_relational_state", "no_control_objective"):
+        return obs
+    try:
+        context = obs["hierarchy_context"]
+    except (KeyError, TypeError):
+        return obs
+    if not torch.is_tensor(context):
+        return obs
+
+    modified_context = context.clone()
+    if ablation == "no_relational_state":
+        slots = modified_context[:, TACTIC_GLOBAL_CONTEXT_DIM:].reshape(
+            -1,
+            TACTIC_TASK_SLOT_COUNT,
+            TACTIC_TASK_SLOT_FEATURE_DIM,
+        )
+        # Keep role, requirement, completion, and availability fields. Remove
+        # robot-object geometry, target geometry, event state, and contact
+        # relations so the hierarchy cannot infer interaction affordances.
+        slots[:, :, 16:40] = 0.0
+    else:
+        # Neutral values remove CBF, preview, CLF, and disturbance pressure
+        # from task/skill selection without changing the simulated state.
+        modified_context[
+            :,
+            (
+                TACTIC_SAFETY_MARGIN_INDEX,
+                TACTIC_PREVIEW_MARGIN_INDEX,
+                TACTIC_CLF_DECREASE_INDEX,
+                TACTIC_DISTURBANCE_QUALITY_INDEX,
+            ),
+        ] = 1.0
+
+    modified_obs = obs.copy()
+    modified_obs["hierarchy_context"] = modified_context
+    return modified_obs
+
+
+def _install_tactic_ablation(actor, ablation, fixed_skill_id):
+    if ablation == "none":
+        return
+    required_attributes = ("task_choice", "skill_choice")
+    if actor is None or not all(
+        hasattr(actor, name) for name in required_attributes
+    ):
+        raise RuntimeError("--ablation requires a TACTIC actor")
+
+    if ablation == "fixed_task":
+        original_task_choice = actor.task_choice
+
+        def fixed_task_choice(self, context, apply_commitment=True):
+            logits, mission_state = original_task_choice(
+                context, apply_commitment=apply_commitment
+            )
+            _, slots, raw_slots = mission_state
+            valid = (
+                (
+                    raw_slots[:, :, TACTIC_TASK_SLOT_REQUIRED_INDEX]
+                    >= 0.5
+                )
+                & (
+                    raw_slots[:, :, TACTIC_TASK_SLOT_COMPLETED_INDEX]
+                    < 0.5
+                )
+                & (
+                    raw_slots[:, :, TACTIC_TASK_SLOT_AVAILABLE_INDEX]
+                    >= 0.5
+                )
+            )
+            priority = torch.arange(
+                TACTIC_TASK_SLOT_COUNT,
+                device=logits.device,
+            ).view(1, -1)
+            priority = priority.expand(logits.shape[0], -1)
+            fallback = torch.argmax(logits, dim=-1)
+            selected = torch.where(
+                valid,
+                priority,
+                torch.full_like(priority, TACTIC_TASK_SLOT_COUNT),
+            ).amin(dim=1)
+            selected = torch.where(
+                valid.any(dim=1), selected, fallback
+            )
+            forced_logits = torch.full_like(logits, -20.0)
+            forced_logits.scatter_(1, selected.unsqueeze(1), 20.0)
+
+            global_context = context[:, :TACTIC_GLOBAL_CONTEXT_DIM]
+            global_latent = self.global_encoder(global_context)
+            morphology_latent = self.morphology_encoder(
+                global_context[:, TACTIC_MORPHOLOGY_SLICE]
+            )
+            global_latent = self.morphology_fusion(
+                torch.cat((global_latent, morphology_latent), dim=-1)
+            )
+            selected_code = torch.nn.functional.one_hot(
+                selected, num_classes=TACTIC_TASK_SLOT_COUNT
+            ).to(dtype=slots.dtype)
+            pooled = torch.einsum("bs,bsd->bd", selected_code, slots)
+            mission = self.mission_fusion(
+                torch.cat((global_latent, pooled), dim=-1)
+            )
+            return forced_logits, (mission, slots, raw_slots)
+
+        actor.task_choice = types.MethodType(fixed_task_choice, actor)
+    elif ablation == "fixed_skill":
+        if (
+            fixed_skill_id < 0
+            or fixed_skill_id >= TACTIC_ACTION_LAYOUT.skill_dim
+        ):
+            raise ValueError("--fixed_skill_id must be between 0 and 11")
+        original_skill_choice = actor.skill_choice
+
+        def fixed_skill_choice(
+            self,
+            task_block,
+            mission_state,
+            apply_commitment=True,
+        ):
+            logits, skill_state = original_skill_choice(
+                task_block,
+                mission_state,
+                apply_commitment=apply_commitment,
+            )
+            forced_logits = torch.full_like(logits, -20.0)
+            forced_logits[:, fixed_skill_id] = 20.0
+            return forced_logits, skill_state
+
+        actor.skill_choice = types.MethodType(fixed_skill_choice, actor)
+    elif ablation == "no_predictive_models":
+        for name in (
+            "task_outcome_gain",
+            "skill_outcome_gain",
+            "skill_effect_gain",
+            "motion_execution_utility_gain",
+        ):
+            setattr(actor, name, 0.0)
+    elif ablation == "no_control_objective":
+        for name in (
+            "constraint_utility_gain",
+            "motion_objective_gain",
+            "motion_execution_utility_gain",
+        ):
+            setattr(actor, name, 0.0)
+    elif ablation == "no_payload_option_barrier":
+        actor.disable_payload_skill_barrier = True
+    elif ablation == "no_payload_relation_authority":
+        actor.payload_survival_control_enabled = False
+    elif ablation != "no_relational_state":
+        raise ValueError("Unsupported TACTIC ablation: {}".format(ablation))
+
+    print(
+        "tactic_ablation={} fixed_skill_id={}".format(
+            ablation,
+            fixed_skill_id if ablation == "fixed_skill" else "n/a",
+        )
+    )
+
+
+def _zyb_fixed_dispatcher_actions(policy_nn, obs):
+    """Compose a task-aware fixed baseline around the original ZYB-v0 actor."""
+
+    actor = getattr(policy_nn, "actor", None)
+    if actor is None or not hasattr(actor, "physical_backbone"):
+        raise RuntimeError("ZYB baseline dispatch requires a TACTIC policy shell")
+    policy_obs = obs["policy"]
+    context = obs["hierarchy_context"]
+    normalized = policy_nn.actor_obs_normalizer(policy_obs)
+    physical_latent = actor.physical_backbone(
+        normalized[:, : actor.physical_core_obs_dim]
+    )
+    baseline_physical = actor.physical_head(physical_latent)[:, :16]
+
+    slots = context[:, TACTIC_GLOBAL_CONTEXT_DIM:].reshape(
+        -1,
+        TACTIC_TASK_SLOT_COUNT,
+        TACTIC_TASK_SLOT_FEATURE_DIM,
+    )
+    valid = (
+        (
+            slots[:, :, TACTIC_TASK_SLOT_REQUIRED_INDEX]
+            >= 0.5
+        )
+        & (
+            slots[:, :, TACTIC_TASK_SLOT_COMPLETED_INDEX]
+            < 0.5
+        )
+        & (
+            slots[:, :, TACTIC_TASK_SLOT_AVAILABLE_INDEX]
+            >= 0.5
+        )
+    )
+    priority = torch.arange(
+        TACTIC_TASK_SLOT_COUNT, device=context.device
+    ).view(1, -1)
+    selected_task = torch.where(
+        valid,
+        priority.expand_as(valid),
+        torch.full_like(
+            priority.expand_as(valid),
+            TACTIC_TASK_SLOT_COUNT,
+        ),
+    ).amin(dim=1)
+    selected_task = torch.where(
+        valid.any(dim=1),
+        selected_task,
+        torch.full_like(selected_task, TACTIC_TASK_SLOT_COUNT - 1),
+    )
+    rows = torch.arange(context.shape[0], device=context.device)
+    selected_slot = slots[rows, selected_task]
+
+    delivery = (
+        selected_slot[:, TACTIC_TASK_SLOT_DELIVERY_TYPE_INDEX]
+        > 0.5
+    )
+    carrying = (
+        selected_slot[:, TACTIC_TASK_SLOT_CARRYING_INDEX]
+        > 0.5
+    )
+    interaction_state = selected_slot[
+        :, TACTIC_TASK_SLOT_INTERACTION_STATE_SLICE
+    ]
+    contact = interaction_state[:, 0] > 0.45
+    lift = interaction_state[:, 1] > 0.20
+    transport = interaction_state[:, 2] > 0.45
+    target_delta = selected_slot[
+        :, TACTIC_TASK_SLOT_TARGET_DELTA_SLICE
+    ]
+    target_distance = 1.5 * torch.linalg.vector_norm(
+        target_delta[:, :2],
+        dim=1,
+    )
+    target_vertical_error = torch.abs(
+        1.5 * target_delta[:, 2]
+        + float(TACTIC_RELEASE_HOVER_HEIGHT)
+    )
+    release = (
+        delivery
+        & carrying
+        & transport
+        & (target_distance < float(TACTIC_RELEASE_TARGET_RADIUS))
+        & (
+            target_vertical_error
+            < float(TACTIC_RELEASE_VERTICAL_TOLERANCE)
+        )
+    )
+    secure = delivery & (~release) & (contact | lift | carrying)
+    interaction_factor = torch.where(
+        release,
+        torch.full_like(selected_task, 2),
+        torch.where(
+            secure,
+            torch.ones_like(selected_task),
+            torch.zeros_like(selected_task),
+        ),
+    )
+
+    safety_margin = context[:, TACTIC_SAFETY_MARGIN_INDEX]
+    preview_margin = context[:, TACTIC_PREVIEW_MARGIN_INDEX]
+    barrier_binding = carrying & (
+        (safety_margin < 0.15) | (preview_margin < 0.18)
+    )
+    motion_factor = torch.where(
+        release | barrier_binding,
+        torch.zeros_like(selected_task),
+        torch.ones_like(selected_task),
+    )
+    selected_skill = (
+        motion_factor * TACTIC_INTERACTION_SKILL_COUNT
+        + interaction_factor
+    )
+
+    distance = (
+        4.0 * selected_slot[:, TACTIC_TASK_SLOT_DISTANCE_INDEX]
+    ).clamp(0.0, 6.0)
+    heading = (
+        math.pi * selected_slot[:, TACTIC_TASK_SLOT_HEADING_INDEX]
+    ).clamp(-math.pi, math.pi)
+    control_margin = torch.minimum(
+        safety_margin, preview_margin
+    ).clamp(0.0, 1.0)
+    authority = (0.30 + 0.70 * control_margin).clamp(0.15, 1.0)
+    approach = 0.75 * torch.tanh(distance / 0.75) * authority
+    alignment = (0.5 * (torch.cos(heading) + 1.0)).square()
+    payload_gate = torch.where(
+        carrying,
+        ((control_margin - 0.02) / 0.18).clamp(0.0, 1.0),
+        torch.ones_like(control_margin),
+    )
+    travel_sign = torch.where(
+        delivery & (~carrying),
+        -torch.ones_like(distance),
+        torch.ones_like(distance),
+    )
+    desired_subgoal = torch.zeros(
+        context.shape[0],
+        TACTIC_ACTION_LAYOUT.task_subgoal_dim,
+        device=context.device,
+        dtype=context.dtype,
+    )
+    desired_subgoal[:, 0] = (
+        travel_sign
+        * approach
+        * (0.05 + 0.95 * alignment)
+        * payload_gate
+    ).clamp(-0.92, 0.92)
+    desired_subgoal[:, 1] = torch.where(
+        delivery,
+        torch.zeros_like(distance),
+        0.50 * approach * torch.sin(heading),
+    ).clamp(-0.80, 0.80)
+    desired_subgoal[:, 2] = (
+        0.70 * heading / math.pi
+    ).clamp(-0.80, 0.80)
+    desired_subgoal[:, 6] = 0.45
+    desired_subgoal[:, 7] = torch.where(
+        delivery,
+        torch.full_like(distance, 0.65),
+        torch.full_like(distance, 0.25),
+    )
+    task_subgoal_logits = torch.atanh(
+        desired_subgoal.clamp(-0.95, 0.95)
+    )
+
+    actions = torch.zeros(
+        context.shape[0],
+        TACTIC_ACTION_LAYOUT.total_dim,
+        device=context.device,
+        dtype=context.dtype,
+    )
+    action_slices = TACTIC_ACTION_LAYOUT.slices()
+    actions[:, :16] = baseline_physical.to(dtype=actions.dtype)
+    actions[:, 16] = torch.where(
+        (secure | carrying) & (~release),
+        torch.full_like(distance, 6.0),
+        torch.full_like(distance, -6.0),
+    )
+    actions[:, action_slices["task"]] = torch.nn.functional.one_hot(
+        selected_task,
+        num_classes=TACTIC_ACTION_LAYOUT.task_dim,
+    ).to(dtype=actions.dtype)
+    selected_object = (selected_task - 5).clamp(
+        0, TACTIC_ACTION_LAYOUT.object_dim - 1
+    )
+    actions[:, action_slices["object"]] = torch.nn.functional.one_hot(
+        selected_object,
+        num_classes=TACTIC_ACTION_LAYOUT.object_dim,
+    ).to(dtype=actions.dtype)
+    actions[:, action_slices["skill"]] = torch.nn.functional.one_hot(
+        selected_skill,
+        num_classes=TACTIC_ACTION_LAYOUT.skill_dim,
+    ).to(dtype=actions.dtype)
+    actions[:, action_slices["task_subgoal"]] = task_subgoal_logits
+    actions[:, action_slices["skill_param"].start] = 0.35
+    actions[:, action_slices["skill_param"].start + 1] = 0.20
+    actions[:, action_slices["termination"].start] = -6.0
+    actions[:, action_slices["termination"].start + 1] = 6.0
+    return actions
+
+
+@hydra_task_config(args_cli.task, args_cli.agent)
+def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
+    agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.release_target_radius_override is not None:
+        radius = float(args_cli.release_target_radius_override)
+        if radius <= 0.0:
+            raise ValueError(
+                "--release_target_radius_override must be positive"
+            )
+        if not hasattr(agent_cfg.policy, "release_target_radius"):
+            raise RuntimeError(
+                "--release_target_radius_override requires TACTIC"
+            )
+        agent_cfg.policy.release_target_radius = radius
+        print("tactic_release_target_radius={}".format(radius))
+    if args_cli.interaction_phase_prior_gain_override is not None:
+        gain = float(args_cli.interaction_phase_prior_gain_override)
+        if gain < 0.0:
+            raise ValueError(
+                "--interaction_phase_prior_gain_override must be nonnegative"
+            )
+        if not hasattr(agent_cfg.policy, "interaction_phase_prior_gain"):
+            raise RuntimeError(
+                "--interaction_phase_prior_gain_override requires TACTIC"
+            )
+        agent_cfg.policy.interaction_phase_prior_gain = gain
+        print("tactic_interaction_phase_prior_gain={}".format(gain))
+    for argument_name, policy_name in (
+        ("wheel_action_scale_override", "wheel_action_scale"),
+        ("wheel_breakaway_override", "wheel_breakaway_action"),
+        ("wheel_action_limit_override", "wheel_action_limit"),
+    ):
+        value = getattr(args_cli, argument_name)
+        if value is not None and hasattr(agent_cfg.policy, policy_name):
+            setattr(agent_cfg.policy, policy_name, float(value))
+    env_cfg.scene.num_envs = int(args_cli.num_envs)
+    env_cfg.seed = agent_cfg.seed if args_cli.seed is None else args_cli.seed
+    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    if (
+        args_cli.camera_env_index < 0
+        or args_cli.camera_env_index >= int(args_cli.num_envs)
+    ):
+        raise ValueError(
+            "--camera_env_index must index one configured environment"
+        )
+    env_cfg.viewer.env_index = int(args_cli.camera_env_index)
+    gripper_actuator = getattr(env_cfg.scene.robot, "actuators", {}).get(
+        "gripper"
+    )
+    if gripper_actuator is not None:
+        if args_cli.gripper_stiffness_override is not None:
+            gripper_actuator.stiffness = float(
+                args_cli.gripper_stiffness_override
+            )
+        if args_cli.gripper_damping_override is not None:
+            gripper_actuator.damping = float(
+                args_cli.gripper_damping_override
+            )
+    arm_ik_cfg = getattr(env_cfg.actions, "arm_ik", None)
+    if (
+        arm_ik_cfg is not None
+        and args_cli.grasp_orientation_weight_override is not None
+    ):
+        arm_ik_cfg.orientation_weight = float(
+            args_cli.grasp_orientation_weight_override
+        )
+    if args_cli.deterministic_reset and getattr(env_cfg, "events", None) is not None:
+        reset_joints = getattr(env_cfg.events, "reset_joints", None)
+        if reset_joints is not None:
+            reset_joints.params["position_range"] = (0.0, 0.0)
+            reset_joints.params["velocity_range"] = (0.0, 0.0)
+        reset_root = getattr(env_cfg.events, "reset_root", None)
+        if reset_root is not None:
+            reset_root.params["pose_range"] = {
+                "x": (0.0, 0.0),
+                "y": (0.0, 0.0),
+                "yaw": (0.0, 0.0),
+            }
+            reset_root.params["velocity_range"] = {
+                axis: (0.0, 0.0) for axis in ("x", "y", "z", "roll", "pitch", "yaw")
+            }
+
+    resume_path = retrieve_file_path(args_cli.checkpoint)
+    log_dir = os.path.dirname(resume_path)
+    env_cfg.log_dir = log_dir
+    if args_cli.video and hasattr(env_cfg, "viewer"):
+        env_cfg.viewer.resolution = (
+            int(args_cli.video_width),
+            int(args_cli.video_height),
+        )
+        eye = _parse_float_list(args_cli.camera_eye)
+        lookat = _parse_float_list(args_cli.camera_lookat)
+        if eye:
+            if len(eye) != 3:
+                raise ValueError("--camera_eye must contain exactly x,y,z")
+            env_cfg.viewer.eye = tuple(eye)
+        if lookat:
+            if len(lookat) != 3:
+                raise ValueError("--camera_lookat must contain exactly x,y,z")
+            env_cfg.viewer.lookat = tuple(lookat)
+        if args_cli.camera_origin is not None:
+            env_cfg.viewer.origin_type = args_cli.camera_origin
+            env_cfg.viewer.env_index = int(args_cli.trace_env)
+            if args_cli.camera_origin in ("asset_root", "asset_body"):
+                env_cfg.viewer.asset_name = args_cli.camera_asset
+            if args_cli.camera_origin == "asset_body":
+                env_cfg.viewer.body_name = args_cli.camera_body
+
+    env = gym.make(
+        args_cli.task,
+        cfg=env_cfg,
+        render_mode="rgb_array" if args_cli.video else None,
+    )
+    if isinstance(env.unwrapped, DirectMARLEnv):
+        env = multi_agent_to_single_agent(env)
+    if args_cli.video:
+        video_folder = (
+            args_cli.video_folder
+            if args_cli.video_folder is not None
+            else Path(log_dir) / "videos" / "evaluation"
+        )
+        video_length = (
+            int(args_cli.video_length)
+            if args_cli.video_length is not None
+            else int(args_cli.num_steps)
+        )
+        video_folder.mkdir(parents=True, exist_ok=True)
+        env = gym.wrappers.RecordVideo(
+            env,
+            video_folder=str(video_folder),
+            step_trigger=lambda step: step == 0,
+            video_length=video_length,
+            disable_logger=True,
+        )
+        print("video_folder={}".format(video_folder))
+    if args_cli.print_layout:
+        base_env = env.unwrapped
+        robot = base_env.scene["robot"]
+        print("robot_body_names={}".format(list(robot.body_names)))
+        print("robot_joint_names={}".format(list(robot.joint_names)))
+        gripper_joint_ids, gripper_joint_names = robot.find_joints(
+            ["joint7", "joint8"], preserve_order=True
+        )
+        print(
+            "gripper_joint_names={} ids={}".format(
+                list(gripper_joint_names), list(gripper_joint_ids)
+            )
+        )
+        print(
+            "gripper_default_joint_pos={}".format(
+                robot.data.default_joint_pos[
+                    0, gripper_joint_ids
+                ].detach().cpu().tolist()
+            )
+        )
+        print(
+            "gripper_soft_joint_pos_limits={}".format(
+                robot.data.soft_joint_pos_limits[
+                    0, gripper_joint_ids
+                ].detach().cpu().tolist()
+            )
+        )
+        for sensor_name in ("contact_forces", "left_finger_object_contact", "right_finger_object_contact"):
+            if sensor_name in base_env.scene.keys():
+                sensor = base_env.scene[sensor_name]
+                print("{}_body_names={}".format(sensor_name, list(getattr(sensor, "body_names", []))))
+        action_manager = base_env.action_manager
+        for action_name in action_manager.active_terms:
+            action_term = action_manager.get_term(action_name)
+            print(
+                "action_term={} dim={} joints={} scale={}".format(
+                    action_name,
+                    int(action_term.action_dim),
+                    list(getattr(action_term, "_joint_names", [])),
+                    getattr(action_term, "_scale", None),
+                )
+            )
+    env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+
+    if agent_cfg.class_name == "OnPolicyRunner":
+        runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
+    elif agent_cfg.class_name == "DistillationRunner":
+        runner = DistillationRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
+    else:
+        raise ValueError("Unsupported runner class: {}".format(agent_cfg.class_name))
+    checkpoint = torch.load(
+        resume_path, map_location=agent_cfg.device, weights_only=False
+    )
+    source_state = checkpoint["model_state_dict"]
+    target_state = runner.alg.policy.state_dict()
+    missing_state = set(target_state).difference(source_state)
+    unexpected_state = set(source_state).difference(target_state)
+    tactic_upgrade_missing = {
+        "actor.embodiment_motion_basis",
+        "actor.motion_action_capacity",
+        "actor.hierarchy_cbf_dual",
+        "actor.hierarchy_clf_dual",
+        "actor.hierarchy_cbf_violation_ema",
+        "actor.hierarchy_clf_violation_ema",
+        "actor.hierarchy_constraint_updates",
+    }
+    tactic_upgrade_unexpected = {"actor.motion_wheel_basis"}
+    tactic_architecture_upgrade = (
+        missing_state.issubset(tactic_upgrade_missing)
+        and unexpected_state.issubset(tactic_upgrade_unexpected)
+        and bool(missing_state or unexpected_state)
+    )
+    if tactic_architecture_upgrade:
+        migrated_state = target_state.copy()
+        for key, value in source_state.items():
+            if (
+                key in migrated_state
+                and migrated_state[key].shape == value.shape
+            ):
+                migrated_state[key] = value.to(
+                    dtype=migrated_state[key].dtype
+                )
+        runner.alg.policy.load_state_dict(migrated_state, strict=True)
+        print(
+            "tactic_architecture_upgrade="
+            "learned_state+identified_embodiment_decoder"
+        )
+        print(
+            "tactic_upgrade_missing_keys={}".format(
+                sorted(missing_state)
+            )
+        )
+        print(
+            "tactic_upgrade_ignored_keys={}".format(
+                sorted(unexpected_state)
+            )
+        )
+    elif args_cli.allow_support_module_upgrade:
+        incompatible = torch.nn.Module.load_state_dict(
+            runner.alg.policy, source_state, strict=False
+        )
+        allowed_missing_fragments = (
+            "support_reference_prototype",
+            "support_gate_prototype",
+            "support_residual_encoder",
+            "support_residual_head",
+            "support_reference_head",
+            "support_gate_head",
+        )
+        disallowed_missing = [
+            key
+            for key in incompatible.missing_keys
+            if not any(fragment in key for fragment in allowed_missing_fragments)
+        ]
+        if disallowed_missing or incompatible.unexpected_keys:
+            raise RuntimeError(
+                "Unsupported partial checkpoint load: missing={} unexpected={}".format(
+                    disallowed_missing, incompatible.unexpected_keys
+                )
+            )
+        print("support_module_upgrade_missing_keys={}".format(incompatible.missing_keys))
+    else:
+        runner.load(resume_path, load_optimizer=False)
+    policy = runner.get_inference_policy(device=env.unwrapped.device)
+
+    try:
+        policy_nn = runner.alg.policy
+    except AttributeError:
+        policy_nn = runner.alg.actor_critic
+    actor = getattr(policy_nn, "actor", None)
+    zyb_baseline_active = args_cli.zyb_baseline_checkpoint is not None
+    if zyb_baseline_active:
+        if (
+            TACTICActorCritic is None
+            or not isinstance(policy_nn, TACTICActorCritic)
+            or load_tactic_zyb_baseline_physical is None
+        ):
+            raise RuntimeError(
+                "--zyb_baseline_checkpoint requires a TACTIC policy shell"
+            )
+        if args_cli.ablation != "none":
+            raise ValueError(
+                "ZYB fixed-dispatcher baseline cannot be combined with ablations"
+            )
+        baseline_path = args_cli.zyb_baseline_checkpoint.expanduser().resolve()
+        if not baseline_path.is_file():
+            raise FileNotFoundError(baseline_path)
+        copied_baseline_tensors = load_tactic_zyb_baseline_physical(
+            policy_nn, str(baseline_path)
+        )
+        policy_nn.eval()
+        print(
+            "zyb_fixed_dispatcher_checkpoint={} copied_tensors={}".format(
+                baseline_path,
+                len(copied_baseline_tensors),
+            )
+        )
+    if args_cli.stability_teacher_only:
+        if actor is None or not hasattr(actor, "stability_teacher_only"):
+            raise RuntimeError(
+                "--stability_teacher_only requires a TACTIC actor"
+            )
+        if not zyb_baseline_active:
+            raise RuntimeError(
+                "--stability_teacher_only requires --zyb_baseline_checkpoint"
+            )
+        actor.stability_teacher_only = True
+        print(
+            "stability_teacher_only=True: leg/wheel actions use the "
+            "migrated ZYB-v0 executor exactly"
+        )
+    _install_tactic_ablation(
+        actor,
+        args_cli.ablation,
+        int(args_cli.fixed_skill_id),
+    )
+    if args_cli.force_motion_skill is not None:
+        if actor is None or not hasattr(actor, "forced_motion_skill_id"):
+            raise RuntimeError(
+                "--force_motion_skill requires a TACTIC actor"
+            )
+        if args_cli.force_motion_skill < 0 or args_cli.force_motion_skill >= 4:
+            raise ValueError("--force_motion_skill must be between 0 and 3")
+        actor.forced_motion_skill_id = int(args_cli.force_motion_skill)
+    if args_cli.force_support_gate is not None:
+        if actor is None or not hasattr(actor, "support_gate_override"):
+            raise RuntimeError(
+                "--force_support_gate requires a TACTIC actor"
+            )
+        if not 0.0 <= args_cli.force_support_gate <= 1.0:
+            raise ValueError("--force_support_gate must be in [0,1]")
+        actor.support_gate_override = float(args_cli.force_support_gate)
+    if (
+        args_cli.wheel_breakaway_override is not None
+        and actor is not None
+        and hasattr(actor, "wheel_breakaway_action")
+    ):
+        value = float(args_cli.wheel_breakaway_override)
+        with torch.no_grad():
+            actor.wheel_breakaway_action.copy_(
+                actor.wheel_breakaway_action.new_tensor((value, 0.60 * value))
+            )
+
+    if args_cli.fixed_base_command and args_cli.base_command_grid:
+        raise ValueError(
+            "--fixed_base_command and --base_command_grid are mutually exclusive"
+        )
+    fixed_base_command = _parse_fixed_base_command(args_cli.fixed_base_command)
+    command_tensor = getattr(
+        env.unwrapped.command_manager.get_term("locomotion"), "_command", None
+    )
+    if not torch.is_tensor(command_tensor):
+        command_tensor = getattr(
+            env.unwrapped.command_manager.get_term("locomotion"),
+            "vel_command_b",
+            None,
+        )
+    command_grid = _parse_base_command_grid(
+        args_cli.base_command_grid,
+        int(args_cli.num_envs),
+        env.unwrapped.device,
+        command_tensor.dtype if torch.is_tensor(command_tensor) else torch.float32,
+    )
+    command_override = (
+        command_grid if command_grid is not None else fixed_base_command
+    )
+    required_task_ids = _required_task_grid(
+        args_cli.required_task_grid,
+        int(args_cli.num_envs),
+        env.unwrapped.device,
+    )
+    required_task_sets, required_task_set_ids = _required_task_sets(
+        args_cli.required_task_sets,
+        int(args_cli.num_envs),
+        env.unwrapped.device,
+    )
+    if required_task_ids is not None and required_task_sets is not None:
+        raise ValueError(
+            "--required_task_grid and --required_task_sets are mutually exclusive"
+        )
+    evaluation_seed = (
+        int(args_cli.seed)
+        if args_cli.seed is not None
+        else int(env_cfg.seed)
+    )
+    env.seed(evaluation_seed)
+    obs, _ = env.reset()
+    print("post_load_evaluation_seed={}".format(evaluation_seed))
+    _apply_fixed_base_command(env, command_override)
+    _apply_required_tasks(
+        env,
+        required_task_ids,
+        required_task_sets,
+        args_cli.force_curriculum_level,
+    )
+    if (
+        command_override is not None
+        or required_task_ids is not None
+        or required_task_sets is not None
+    ):
+        obs = env.get_observations()
+    obs = _tactic_ablation_observation(obs, args_cli.ablation)
+    wheel_pattern, wheel_pattern_ids = _wheel_pattern_grid(
+        int(args_cli.num_envs),
+        args_cli.wheel_pattern_grid,
+        env.unwrapped.device,
+        obs["policy"].dtype,
+    )
+    wheel_sign_pattern, wheel_sign_pattern_ids = _wheel_sign_grid(
+        int(args_cli.num_envs),
+        args_cli.wheel_sign_grid,
+        env.unwrapped.device,
+        obs["policy"].dtype,
+    )
+    (
+        wheel_amplitude_pattern,
+        wheel_amplitude_ids,
+        wheel_amplitude_values,
+    ) = _wheel_amplitude_grid(
+        args_cli.wheel_amplitude_grid,
+        int(args_cli.num_envs),
+        env.unwrapped.device,
+        obs["policy"].dtype,
+    )
+    fixed_wheel_actions = _fixed_wheel_actions(
+        args_cli.fixed_wheel_actions,
+        int(args_cli.num_envs),
+        env.unwrapped.device,
+        obs["policy"].dtype,
+    )
+    override_count = sum(
+        value is not None
+        for value in (
+            wheel_pattern,
+            wheel_sign_pattern,
+            wheel_amplitude_pattern,
+            fixed_wheel_actions,
+        )
+    )
+    if override_count > 1:
+        raise ValueError(
+            "--wheel_pattern_grid, --wheel_sign_grid, "
+            "--wheel_amplitude_grid, and --fixed_wheel_actions are "
+            "mutually exclusive"
+        )
+    if wheel_pattern is not None:
+        wheel_override = wheel_pattern
+    elif wheel_sign_pattern is not None:
+        wheel_override = wheel_sign_pattern
+        wheel_pattern_ids = wheel_sign_pattern_ids
+    elif wheel_amplitude_pattern is not None:
+        wheel_override = wheel_amplitude_pattern
+    else:
+        wheel_override = fixed_wheel_actions
+    if args_cli.trace_stride < 1:
+        raise ValueError("--trace_stride must be at least 1")
+    if args_cli.actor_diagnostics_stride < 1:
+        raise ValueError("--actor_diagnostics_stride must be at least 1")
+    if args_cli.trace_env < 0 or args_cli.trace_env >= int(args_cli.num_envs):
+        raise ValueError("--trace_env must index one of the configured environments")
+
+    rear_stance_override = _prepare_stance_override(
+        env,
+        _parse_float_list(args_cli.front_thigh_deltas),
+        _parse_float_list(args_cli.front_calf_deltas),
+        _parse_float_list(args_cli.rear_thigh_deltas),
+        _parse_float_list(args_cli.rear_calf_deltas),
+        _parse_stance_overrides(args_cli.stance_overrides),
+    )
+    series = {"Mean/reward": [], "Dones/mean": []}
+    per_env_accumulator = {}
+    first_hit_steps = {}
+    trace_rows = []
+    trace_episode_id = 0
+    trace_episode_step = 0
+    step_dt = float(getattr(env.unwrapped, "step_dt", 0.0))
+    start = time.time()
+    for step in range(int(args_cli.num_steps)):
+        actor_diagnostic_leaves = {}
+        with torch.inference_mode():
+            if zyb_baseline_active:
+                actions = _zyb_fixed_dispatcher_actions(policy_nn, obs)
+            else:
+                actions = (
+                    policy_nn.act(obs)
+                    if args_cli.stochastic_policy
+                    else policy(obs)
+                )
+            if step == 0 and args_cli.snapshot_pt is not None:
+                snapshot = {
+                    "task": args_cli.task,
+                    "policy_obs": obs["policy"][
+                        args_cli.trace_env
+                    ].detach().cpu(),
+                    "actions": actions[
+                        args_cli.trace_env
+                    ].detach().cpu(),
+                }
+                try:
+                    snapshot["hierarchy_context"] = obs[
+                        "hierarchy_context"
+                    ][args_cli.trace_env].detach().cpu()
+                except (KeyError, TypeError):
+                    pass
+                args_cli.snapshot_pt.parent.mkdir(
+                    parents=True, exist_ok=True
+                )
+                torch.save(snapshot, args_cli.snapshot_pt)
+            if (
+                args_cli.actor_diagnostics
+                and step % args_cli.actor_diagnostics_stride == 0
+                and not zyb_baseline_active
+                and TACTICActorCritic is not None
+                and isinstance(policy_nn, TACTICActorCritic)
+            ):
+                context = policy_nn._context(obs)
+                task_logits, mission_state = policy_nn.actor.task_choice(
+                    context, apply_commitment=False
+                )
+                task_probability = torch.softmax(task_logits, dim=-1)
+                task_action = policy_nn._task_from_action(actions)
+                skill_logits, _ = policy_nn.actor.skill_choice(
+                    task_action,
+                    mission_state,
+                    apply_commitment=False,
+                )
+                skill_probability = torch.softmax(skill_logits, dim=-1)
+                skill_grid = skill_probability.reshape(
+                    -1,
+                    TACTIC_MOTION_SKILL_COUNT,
+                    TACTIC_INTERACTION_SKILL_COUNT,
+                )
+                motion_probability = skill_grid.sum(dim=2)
+                interaction_probability = skill_grid.sum(dim=1)
+                task_entropy_scale = max(
+                    math.log(float(task_probability.shape[1])), 1.0e-6
+                )
+                skill_entropy_scale = max(
+                    math.log(float(skill_probability.shape[1])), 1.0e-6
+                )
+                actor_diagnostic_leaves.update(
+                    {
+                        "Actor/task_confidence": task_probability.max(
+                            dim=1
+                        ).values,
+                        "Actor/task_entropy": -(
+                            task_probability
+                            * task_probability.clamp_min(1.0e-8).log()
+                        ).sum(dim=1)
+                        / task_entropy_scale,
+                        "Actor/skill_confidence": skill_probability.max(
+                            dim=1
+                        ).values,
+                        "Actor/skill_entropy": -(
+                            skill_probability
+                            * skill_probability.clamp_min(1.0e-8).log()
+                        ).sum(dim=1)
+                        / skill_entropy_scale,
+                        "Actor/motion_confidence": motion_probability.max(
+                            dim=1
+                        ).values,
+                        "Actor/motion_entropy": -(
+                            motion_probability
+                            * motion_probability.clamp_min(1.0e-8).log()
+                        ).sum(dim=1)
+                        / math.log(float(TACTIC_MOTION_SKILL_COUNT)),
+                        "Actor/interaction_confidence": interaction_probability.max(
+                            dim=1
+                        ).values,
+                        "Actor/interaction_entropy": -(
+                            interaction_probability
+                            * interaction_probability.clamp_min(1.0e-8).log()
+                        ).sum(dim=1)
+                        / math.log(float(TACTIC_INTERACTION_SKILL_COUNT)),
+                    }
+                )
+                for factor_id in range(TACTIC_MOTION_SKILL_COUNT):
+                    actor_diagnostic_leaves[
+                        f"Actor/motion_probability_{factor_id}"
+                    ] = motion_probability[:, factor_id]
+                for factor_id in range(TACTIC_INTERACTION_SKILL_COUNT):
+                    actor_diagnostic_leaves[
+                        f"Actor/interaction_probability_{factor_id}"
+                    ] = interaction_probability[:, factor_id]
+                for option_id in range(TACTIC_ACTION_LAYOUT.skill_dim):
+                    actor_diagnostic_leaves[
+                        f"Actor/skill_probability_{option_id}"
+                    ] = skill_probability[:, option_id]
+                for task_id in range(TACTIC_ACTION_LAYOUT.task_dim):
+                    actor_diagnostic_leaves[
+                        f"Actor/task_probability_{task_id}"
+                    ] = task_probability[:, task_id]
+                recovery_preference = getattr(
+                    policy_nn.actor,
+                    "last_recovery_task_preference",
+                    None,
+                )
+                if torch.is_tensor(recovery_preference):
+                    actor_diagnostic_leaves[
+                        "Actor/recovery_task_preference"
+                    ] = recovery_preference[:, 4]
+                recovery_task_adapter = getattr(
+                    policy_nn.actor,
+                    "last_recovery_task_adapter",
+                    None,
+                )
+                if torch.is_tensor(recovery_task_adapter):
+                    actor_diagnostic_leaves[
+                        "Actor/recovery_task_adapter"
+                    ] = recovery_task_adapter
+                recovery_adapter_gate = getattr(
+                    policy_nn.actor,
+                    "last_recovery_adapter_gate",
+                    None,
+                )
+                if torch.is_tensor(recovery_adapter_gate):
+                    actor_diagnostic_leaves[
+                        "Actor/recovery_adapter_gate"
+                    ] = recovery_adapter_gate
+                recovery_payload_mass = getattr(
+                    policy_nn.actor,
+                    "last_recovery_payload_mass",
+                    None,
+                )
+                if torch.is_tensor(recovery_payload_mass):
+                    actor_diagnostic_leaves[
+                        "Actor/recovery_payload_mass"
+                    ] = recovery_payload_mass
+                recovery_motion_adapter = getattr(
+                    policy_nn.actor,
+                    "last_recovery_motion_adapter",
+                    None,
+                )
+                if torch.is_tensor(recovery_motion_adapter):
+                    for factor_id in range(
+                        TACTIC_MOTION_SKILL_COUNT
+                    ):
+                        actor_diagnostic_leaves[
+                            "Actor/recovery_motion_adapter_"
+                            f"{factor_id}"
+                        ] = recovery_motion_adapter[:, factor_id]
+                recovery_interaction_adapter = getattr(
+                    policy_nn.actor,
+                    "last_recovery_interaction_adapter",
+                    None,
+                )
+                if torch.is_tensor(recovery_interaction_adapter):
+                    for phase_id in range(
+                        TACTIC_INTERACTION_SKILL_COUNT
+                    ):
+                        actor_diagnostic_leaves[
+                            "Actor/recovery_interaction_adapter_"
+                            f"{phase_id}"
+                        ] = recovery_interaction_adapter[:, phase_id]
+                slices = TACTIC_ACTION_LAYOUT.slices()
+                executed_skill_id = torch.argmax(
+                    actions[:, slices["skill"]], dim=-1
+                )
+                executed_motion_id = torch.div(
+                    executed_skill_id,
+                    TACTIC_INTERACTION_SKILL_COUNT,
+                    rounding_mode="floor",
+                )
+                executed_interaction_id = executed_skill_id.remainder(
+                    TACTIC_INTERACTION_SKILL_COUNT
+                )
+                skill_survival = getattr(
+                    policy_nn.actor, "last_skill_survival", None
+                )
+                if torch.is_tensor(skill_survival):
+                    actor_diagnostic_leaves[
+                        "Actor/executed_payload_survival"
+                    ] = skill_survival.gather(
+                        1, executed_skill_id.unsqueeze(1)
+                    ).squeeze(1)
+                    actor_diagnostic_leaves[
+                        "Actor/payload_survival_span"
+                    ] = (
+                        skill_survival.max(dim=1).values
+                        - skill_survival.min(dim=1).values
+                    )
+                for factor_id in range(TACTIC_MOTION_SKILL_COUNT):
+                    actor_diagnostic_leaves[
+                        f"Actor/executed_motion_{factor_id}"
+                    ] = (executed_motion_id == factor_id).float()
+                for factor_id in range(TACTIC_INTERACTION_SKILL_COUNT):
+                    actor_diagnostic_leaves[
+                        f"Actor/executed_interaction_{factor_id}"
+                    ] = (executed_interaction_id == factor_id).float()
+                for parameter_id in range(
+                    TACTIC_ACTION_LAYOUT.skill_param_dim
+                ):
+                    actor_diagnostic_leaves[
+                        f"Actor/skill_parameter_{parameter_id}"
+                    ] = actions[
+                        :, slices["skill_param"].start + parameter_id
+                    ]
+                for subgoal_id in range(
+                    TACTIC_ACTION_LAYOUT.task_subgoal_dim
+                ):
+                    actor_diagnostic_leaves[
+                        f"Actor/task_subgoal_{subgoal_id}"
+                    ] = actions[
+                        :, slices["task_subgoal"].start + subgoal_id
+                    ]
+                task_outcomes = policy_nn.actor.last_task_outcomes
+                task_outcome_confidence = (
+                    policy_nn.actor.last_task_outcome_confidence
+                )
+                task_constraint_multiplier = (
+                    policy_nn.actor.last_task_constraint_multiplier
+                )
+                task_constraint_violation = (
+                    policy_nn.actor.last_task_constraint_violation
+                )
+                skill_outcomes = policy_nn.actor.last_skill_outcomes
+                skill_effects = policy_nn.actor.last_skill_effects
+                skill_effect_confidence = (
+                    policy_nn.actor.last_skill_effect_confidence
+                )
+                task_utility = policy_nn.actor.last_task_outcome_utility
+                skill_utility = policy_nn.actor.last_skill_outcome_utility
+                skill_effect_utility = (
+                    policy_nn.actor.last_skill_effect_utility
+                )
+                skill_constraint_multipliers = (
+                    policy_nn.actor.last_skill_constraint_multipliers
+                )
+                skill_constraint_threshold = (
+                    policy_nn.actor.last_skill_constraint_threshold
+                )
+                skill_constraint_violation = (
+                    policy_nn.actor.last_skill_constraint_violation
+                )
+                motion_objective_demand = (
+                    policy_nn.actor.last_motion_objective_demand
+                )
+                motion_objective_scores = (
+                    policy_nn.actor.last_motion_objective_scores
+                )
+                interaction_phase_target = (
+                    policy_nn.actor.last_interaction_phase_target
+                )
+                if torch.is_tensor(task_outcomes):
+                    selected = torch.einsum(
+                        "bs,bso->bo",
+                        actions[:, slices["task"]],
+                        task_outcomes,
+                    )
+                    for outcome_id, name in enumerate(
+                        ("progress", "completion", "mission", "robustness")
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/task_outcome_{name}"
+                        ] = selected[:, outcome_id]
+                if torch.is_tensor(skill_outcomes):
+                    selected = torch.einsum(
+                        "bs,bso->bo",
+                        actions[:, slices["skill"]],
+                        skill_outcomes,
+                    )
+                    for outcome_id, name in enumerate(
+                        ("progress", "robustness", "tracking", "interaction")
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/skill_outcome_{name}"
+                        ] = selected[:, outcome_id]
+                if torch.is_tensor(skill_effects):
+                    selected = torch.einsum(
+                        "bs,bse->be",
+                        actions[:, slices["skill"]],
+                        skill_effects,
+                    )
+                    for effect_id, name in enumerate(
+                        (
+                            "base_vx",
+                            "base_wz",
+                            "progress",
+                            "tracking_improvement",
+                            "cbf_margin",
+                            "preview_margin",
+                            "clf_decrease",
+                            "disturbance_quality",
+                            "interaction_progress",
+                        )
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/skill_effect_{name}"
+                        ] = selected[:, effect_id]
+                if torch.is_tensor(task_utility):
+                    task_id = torch.argmax(
+                        actions[:, slices["task"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/task_outcome_utility"
+                    ] = task_utility.gather(
+                        1, task_id.unsqueeze(1)
+                    ).squeeze(1)
+                if torch.is_tensor(task_outcome_confidence):
+                    task_id = torch.argmax(
+                        actions[:, slices["task"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/task_outcome_confidence"
+                    ] = task_outcome_confidence.gather(
+                        1, task_id.unsqueeze(1)
+                    ).squeeze(1)
+                if torch.is_tensor(task_constraint_multiplier):
+                    actor_diagnostic_leaves[
+                        "Actor/task_constraint_multiplier"
+                    ] = task_constraint_multiplier
+                if torch.is_tensor(task_constraint_violation):
+                    task_id = torch.argmax(
+                        actions[:, slices["task"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/task_constraint_violation"
+                    ] = task_constraint_violation.gather(
+                        1, task_id.unsqueeze(1)
+                    ).squeeze(1)
+                if torch.is_tensor(skill_utility):
+                    skill_id = torch.argmax(
+                        actions[:, slices["skill"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/skill_outcome_utility"
+                    ] = skill_utility.gather(
+                        1, skill_id.unsqueeze(1)
+                    ).squeeze(1)
+                if torch.is_tensor(skill_effect_confidence):
+                    skill_id = torch.argmax(
+                        actions[:, slices["skill"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/skill_effect_confidence"
+                    ] = skill_effect_confidence.gather(
+                        1, skill_id.unsqueeze(1)
+                    ).squeeze(1)
+                if torch.is_tensor(skill_effect_utility):
+                    skill_id = torch.argmax(
+                        actions[:, slices["skill"]], dim=-1
+                    )
+                    actor_diagnostic_leaves[
+                        "Actor/skill_effect_utility"
+                    ] = skill_effect_utility.gather(
+                        1, skill_id.unsqueeze(1)
+                    ).squeeze(1)
+                    actor_diagnostic_leaves[
+                        "Actor/skill_effect_utility_span"
+                    ] = (
+                        skill_effect_utility.max(dim=1).values
+                        - skill_effect_utility.min(dim=1).values
+                    )
+                if (
+                    torch.is_tensor(skill_constraint_multipliers)
+                    and torch.is_tensor(skill_constraint_threshold)
+                    and torch.is_tensor(skill_constraint_violation)
+                ):
+                    skill_id = torch.argmax(
+                        actions[:, slices["skill"]], dim=-1
+                    )
+                    rows = torch.arange(
+                        skill_id.shape[0], device=skill_id.device
+                    )
+                    selected_violation = skill_constraint_violation[
+                        rows, skill_id
+                    ]
+                    if skill_constraint_threshold.ndim == 3:
+                        selected_threshold = skill_constraint_threshold[
+                            rows, skill_id
+                        ]
+                    else:
+                        selected_threshold = skill_constraint_threshold
+                    for constraint_id, name in enumerate(
+                        ("cbf", "preview", "clf", "disturbance")
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/constraint_multiplier_{name}"
+                        ] = skill_constraint_multipliers[
+                            :, constraint_id
+                        ]
+                        actor_diagnostic_leaves[
+                            f"Actor/constraint_threshold_{name}"
+                        ] = selected_threshold[
+                            :, constraint_id
+                        ]
+                        actor_diagnostic_leaves[
+                            f"Actor/constraint_violation_{name}"
+                        ] = selected_violation[:, constraint_id]
+                    actor_diagnostic_leaves[
+                        "Actor/constraint_violation_mean"
+                    ] = selected_violation.mean(dim=1)
+                if torch.is_tensor(motion_objective_demand):
+                    for objective_id, name in enumerate(
+                        ("progress", "turning", "safety", "precision")
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/objective_demand_{name}"
+                        ] = motion_objective_demand[:, objective_id]
+                if torch.is_tensor(motion_objective_scores):
+                    actor_diagnostic_leaves[
+                        "Actor/motion_objective_score_span"
+                        ] = (
+                            motion_objective_scores.max(dim=1).values
+                            - motion_objective_scores.min(dim=1).values
+                        )
+                if torch.is_tensor(interaction_phase_target):
+                    for phase_id, name in enumerate(
+                        ("approach", "secure", "release")
+                    ):
+                        actor_diagnostic_leaves[
+                            f"Actor/interaction_phase_target_{name}"
+                        ] = interaction_phase_target[:, phase_id]
+                for prefix, attribute in (
+                    (
+                        "interaction_phase_raw",
+                        "last_interaction_phase_raw_probability",
+                    ),
+                    (
+                        "interaction_phase_projected",
+                        "last_interaction_phase_projected_probability",
+                    ),
+                ):
+                    value = getattr(policy_nn.actor, attribute, None)
+                    if torch.is_tensor(value):
+                        for phase_id, name in enumerate(
+                            ("approach", "secure", "release")
+                        ):
+                            actor_diagnostic_leaves[
+                                f"Actor/{prefix}_{name}"
+                            ] = value[:, phase_id]
+                for name, attribute in (
+                    (
+                        "capture_feasibility",
+                        "last_interaction_capture_feasibility",
+                    ),
+                    (
+                        "secure_entry_feasibility",
+                        "last_interaction_secure_entry_feasibility",
+                    ),
+                    (
+                        "release_feasibility",
+                        "last_interaction_release_feasibility",
+                    ),
+                    (
+                        "release_frontier",
+                        "last_interaction_release_frontier",
+                    ),
+                    (
+                        "release_target_gate",
+                        "last_interaction_release_target_gate",
+                    ),
+                    (
+                        "release_vertical_gate",
+                        "last_interaction_release_vertical_gate",
+                    ),
+                    (
+                        "release_transport_gate",
+                        "last_interaction_release_transport_gate",
+                    ),
+                    (
+                        "release_control_gate",
+                        "last_interaction_release_control_gate",
+                    ),
+                    (
+                        "hold_evidence",
+                        "last_interaction_hold_evidence",
+                    ),
+                    (
+                        "capture_center_error",
+                        "last_interaction_center_error",
+                    ),
+                    (
+                        "capture_finger_distance",
+                        "last_interaction_finger_distance",
+                    ),
+                    (
+                        "capture_tcp_distance",
+                        "last_interaction_tcp_distance",
+                    ),
+                ):
+                    value = getattr(policy_nn.actor, attribute, None)
+                    if torch.is_tensor(value):
+                        actor_diagnostic_leaves[
+                            f"Actor/{name}"
+                        ] = value
+                gripper_diagnostics = (
+                    ("semantic_logit", "last_gripper_semantic_logit"),
+                    ("residual", "last_gripper_residual"),
+                    (
+                        "residual_authority",
+                        "last_gripper_residual_authority",
+                    ),
+                    ("logit", "last_gripper_logit"),
+                )
+                for name, attribute in gripper_diagnostics:
+                    value = getattr(policy_nn.actor, attribute, None)
+                    if torch.is_tensor(value):
+                        actor_diagnostic_leaves[
+                            f"Actor/gripper_{name}"
+                        ] = value.squeeze(1)
+                wheel_prior = policy_nn.actor.last_wheel_prior
+                wheel_residual = policy_nn.actor.last_wheel_residual
+                wheel_gate = policy_nn.actor.last_wheel_skill_gate
+                wheel_prior_gate = policy_nn.actor.last_wheel_prior_gate
+                wheel_control_authority = (
+                    policy_nn.actor.last_wheel_control_authority
+                )
+                motion_epistemic_risk = (
+                    policy_nn.actor.last_motion_epistemic_risk
+                )
+                embodiment_response_prediction = (
+                    policy_nn.actor.last_embodiment_response_prediction
+                )
+                embodiment_response_score = (
+                    policy_nn.actor.last_embodiment_response_score
+                )
+                embodiment_response_authority = (
+                    policy_nn.actor.last_embodiment_response_authority
+                )
+                motion_execution_utility = (
+                    policy_nn.actor.last_motion_execution_utility
+                )
+                task_motion_target = (
+                    policy_nn.actor.last_task_motion_target
+                )
+                task_motion_request = (
+                    policy_nn.actor.last_task_motion_request
+                )
+                motion_gain = policy_nn.actor.last_motion_kinematic_gain
+                motion_activity_demand = (
+                    policy_nn.actor.last_motion_activity_demand
+                )
+                idle_motion_penalty = (
+                    policy_nn.actor.last_idle_motion_penalty
+                )
+                payload_risk_pressure = (
+                    policy_nn.actor.last_payload_skill_barrier_pressure
+                )
+                payload_transient_demand = (
+                    policy_nn.actor.last_payload_transient_demand
+                )
+                payload_risk_correction = (
+                    policy_nn.actor.last_payload_skill_projection
+                )
+                payload_survival_advantage = (
+                    policy_nn.actor.last_payload_survival_advantage
+                )
+                payload_survival_authority = (
+                    policy_nn.actor.last_payload_survival_authority
+                )
+                payload_survival_projection = (
+                    policy_nn.actor.last_payload_survival_projection
+                )
+                payload_survival_exit = (
+                    policy_nn.actor.last_payload_survival_exit
+                )
+                motion_authority = (
+                    policy_nn.actor.motion_action_capacity.detach().clamp(
+                        0.08 * policy_nn.actor.wheel_action_limit,
+                        policy_nn.actor.wheel_action_limit,
+                    )
+                )
+                support_reference = (
+                    policy_nn.actor.last_support_reference
+                )
+                support_gate = policy_nn.actor.last_support_gate
+                support_residual = (
+                    policy_nn.actor.last_support_residual
+                )
+                if torch.is_tensor(wheel_prior):
+                    for wheel_id in range(4):
+                        actor_diagnostic_leaves[
+                            f"Actor/wheel_prior_{wheel_id}"
+                        ] = wheel_prior[:, wheel_id]
+                if torch.is_tensor(wheel_residual):
+                    actor_diagnostic_leaves[
+                        "Actor/wheel_residual_abs"
+                    ] = wheel_residual.abs().mean(dim=1)
+                if torch.is_tensor(wheel_gate):
+                    actor_diagnostic_leaves[
+                        "Actor/wheel_skill_gate"
+                    ] = wheel_gate
+                if torch.is_tensor(wheel_prior_gate):
+                    actor_diagnostic_leaves[
+                        "Actor/wheel_prior_gate"
+                    ] = wheel_prior_gate
+                if torch.is_tensor(wheel_control_authority):
+                    actor_diagnostic_leaves[
+                        "Actor/wheel_control_authority"
+                    ] = wheel_control_authority
+                if torch.is_tensor(motion_epistemic_risk):
+                    actor_diagnostic_leaves[
+                        "Actor/motion_epistemic_risk"
+                    ] = motion_epistemic_risk.mean(dim=1)
+                if torch.is_tensor(embodiment_response_prediction):
+                    for motion_id in range(TACTIC_MOTION_SKILL_COUNT):
+                        actor_diagnostic_leaves[
+                            f"Actor/embodiment_response_vx_{motion_id}"
+                        ] = embodiment_response_prediction[
+                            :, motion_id, 0
+                        ]
+                        actor_diagnostic_leaves[
+                            f"Actor/embodiment_response_wz_{motion_id}"
+                        ] = embodiment_response_prediction[
+                            :, motion_id, 1
+                        ]
+                if torch.is_tensor(embodiment_response_score):
+                    for motion_id in range(TACTIC_MOTION_SKILL_COUNT):
+                        actor_diagnostic_leaves[
+                            f"Actor/embodiment_response_score_{motion_id}"
+                        ] = embodiment_response_score[:, motion_id]
+                if torch.is_tensor(embodiment_response_authority):
+                    actor_diagnostic_leaves[
+                        "Actor/embodiment_response_authority"
+                    ] = embodiment_response_authority
+                if torch.is_tensor(motion_execution_utility):
+                    for motion_id in range(TACTIC_MOTION_SKILL_COUNT):
+                        actor_diagnostic_leaves[
+                            f"Actor/motion_execution_utility_{motion_id}"
+                        ] = motion_execution_utility[:, motion_id]
+                if torch.is_tensor(task_motion_target):
+                    actor_diagnostic_leaves[
+                        "Actor/task_motion_target_vx"
+                    ] = task_motion_target[:, 0]
+                    actor_diagnostic_leaves[
+                        "Actor/task_motion_target_wz"
+                    ] = task_motion_target[:, 1]
+                if torch.is_tensor(task_motion_request):
+                    actor_diagnostic_leaves[
+                        "Actor/task_motion_request_vx"
+                    ] = task_motion_request[:, 0]
+                    actor_diagnostic_leaves[
+                        "Actor/task_motion_request_wz"
+                    ] = task_motion_request[:, 1]
+                if torch.is_tensor(motion_activity_demand):
+                    actor_diagnostic_leaves[
+                        "Actor/motion_activity_demand"
+                    ] = motion_activity_demand
+                if torch.is_tensor(idle_motion_penalty):
+                    actor_diagnostic_leaves[
+                        "Actor/idle_motion_penalty"
+                    ] = idle_motion_penalty
+                if torch.is_tensor(payload_risk_pressure):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_risk_pressure"
+                    ] = payload_risk_pressure
+                if torch.is_tensor(payload_transient_demand):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_transient_demand"
+                    ] = payload_transient_demand
+                if torch.is_tensor(payload_risk_correction):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_risk_logit_correction"
+                    ] = payload_risk_correction
+                if torch.is_tensor(payload_survival_advantage):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_survival_advantage"
+                    ] = payload_survival_advantage
+                if torch.is_tensor(payload_survival_authority):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_survival_authority"
+                    ] = payload_survival_authority
+                if torch.is_tensor(payload_survival_projection):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_survival_logit_correction"
+                    ] = payload_survival_projection
+                if torch.is_tensor(payload_survival_exit):
+                    actor_diagnostic_leaves[
+                        "Actor/payload_survival_exit"
+                    ] = payload_survival_exit
+                for wheel_id in range(4):
+                    actor_diagnostic_leaves[
+                        f"Actor/wheel_action_{wheel_id}"
+                    ] = actions[:, 12 + wheel_id]
+                actor_diagnostic_leaves[
+                    "Actor/motion_drive_authority"
+                ] = actions.new_full(
+                    (actions.shape[0],), float(motion_authority[0])
+                )
+                actor_diagnostic_leaves[
+                    "Actor/motion_turn_authority"
+                ] = actions.new_full(
+                    (actions.shape[0],), float(motion_authority[1])
+                )
+                if torch.is_tensor(motion_gain):
+                    actor_diagnostic_leaves[
+                        "Actor/motion_drive_gain"
+                    ] = motion_gain[:, 0]
+                    actor_diagnostic_leaves[
+                        "Actor/motion_yaw_gain"
+                    ] = motion_gain[:, 1]
+                if torch.is_tensor(support_reference):
+                    for action_id in range(12):
+                        actor_diagnostic_leaves[
+                            f"Actor/support_reference_{action_id}"
+                        ] = support_reference[:, action_id]
+                if torch.is_tensor(support_gate):
+                    actor_diagnostic_leaves[
+                        "Actor/support_gate"
+                    ] = support_gate
+                if torch.is_tensor(support_residual):
+                    actor_diagnostic_leaves[
+                        "Actor/support_residual_abs"
+                    ] = support_residual.abs().mean(dim=1)
+            if (
+                args_cli.actor_diagnostics
+                and step % args_cli.actor_diagnostics_stride == 0
+                and hasattr(policy_nn, "actor")
+                and not (
+                    TACTICActorCritic is not None
+                    and isinstance(policy_nn, TACTICActorCritic)
+                )
+            ):
+                actor_obs = policy_nn.actor_obs_normalizer(policy_nn.get_actor_obs(obs))
+                hierarchy_context = policy_nn._hierarchy_context(obs)
+                actor_mean, actor_aux = policy_nn.actor(
+                    actor_obs, hierarchy_context, return_aux=True
+                )
+                support_residual = actor_aux.get("support_residual")
+                support_reference = actor_aux.get("support_reference")
+                support_gate = actor_aux.get("support_gate")
+                teacher = None
+                try:
+                    teacher = obs["hierarchy_teacher"]
+                except (KeyError, TypeError):
+                    pass
+                if torch.is_tensor(support_residual):
+                    series.setdefault("Actor/support_residual_abs", []).append(
+                        float(support_residual.abs().mean().cpu().item())
+                    )
+                    for action_id in range(min(12, support_residual.shape[1])):
+                        series.setdefault(f"Actor/support_residual_{action_id}", []).append(
+                            float(support_residual[:, action_id].mean().cpu().item())
+                        )
+                        series.setdefault(f"Actor/physical_mean_{action_id}", []).append(
+                            float(actor_mean[:, action_id].mean().cpu().item())
+                        )
+                if torch.is_tensor(support_reference):
+                    for action_id in range(min(12, support_reference.shape[1])):
+                        series.setdefault(f"Actor/support_reference_{action_id}", []).append(
+                            float(support_reference[:, action_id].mean().cpu().item())
+                        )
+                if torch.is_tensor(support_gate):
+                    series.setdefault("Actor/support_gate", []).append(
+                        float(support_gate.mean().cpu().item())
+                    )
+                if torch.is_tensor(teacher) and teacher.shape[1] >= 53:
+                    support_target = teacher[:, 29:41]
+                    support_mask = teacher[:, 41:53].clamp(0.0, 1.0)
+                    support_error = (actor_mean[:, :12] - support_target).abs()
+                    weighted_error = (support_error * support_mask).sum()
+                    weighted_error = weighted_error / support_mask.sum().clamp(min=1.0)
+                    series.setdefault("Actor/support_teacher_mae", []).append(
+                        float(weighted_error.cpu().item())
+                    )
+                    series.setdefault("Actor/support_teacher_activity", []).append(
+                        float(support_mask.mean().cpu().item())
+                    )
+                if torch.is_tensor(teacher):
+                    actor = policy_nn.actor
+                    label_offset = 0
+                    label_dims = (actor.task_dim, actor.phase_dim, actor.skill_dim, actor.object_dim)
+                    if teacher.shape[1] >= sum(label_dims):
+                        for prefix, probability, width in (
+                            ("task", actor_aux.get("task_probability"), actor.task_dim),
+                            ("phase", actor_aux.get("phase_probability"), actor.phase_dim),
+                            ("skill", actor_aux.get("skill_probability"), actor.skill_dim),
+                            ("object", actor_aux.get("object_probability"), actor.object_dim),
+                        ):
+                            target = teacher[:, label_offset : label_offset + width]
+                            label_offset += width
+                            if torch.is_tensor(probability):
+                                actor_diagnostic_leaves.update(
+                                    _categorical_actor_diagnostics(prefix, probability, target)
+                                )
+            if args_cli.zero_actions:
+                actions.zero_()
+            if wheel_override is not None:
+                actions[:, 12:16] = wheel_override
+            _apply_rear_stance_override(actions, rear_stance_override)
+            obs, rewards, dones, extras = env.step(actions)
+            policy_nn.reset(dones)
+            _apply_fixed_base_command(env, command_override)
+            _apply_required_tasks(
+                env,
+                required_task_ids,
+                required_task_sets,
+                args_cli.force_curriculum_level,
+            )
+            if (
+                command_override is not None
+                or required_task_ids is not None
+                or required_task_sets is not None
+            ):
+                obs = env.get_observations()
+            obs = _tactic_ablation_observation(
+                obs, args_cli.ablation
+            )
+            _apply_gripper_diagnostic_override(env, args_cli.force_gripper_target)
+        series["Mean/reward"].append(float(rewards.detach().float().mean().cpu().item()))
+        series["Dones/mean"].append(float(dones.detach().float().mean().cpu().item()))
+        if isinstance(extras, dict):
+            log_values = extras.get("log", {})
+            flat = {}
+            _flatten_numeric("", log_values, flat)
+            for key, value in flat.items():
+                if not key:
+                    continue
+                series.setdefault(key, []).append(value)
+
+        command_leaves = _command_metric_leaves(env)
+        command_leaves.update(_tactic_object_event_leaves(env))
+        command_leaves.update(_physical_state_leaves(env))
+        command_leaves.update(_termination_leaves(env))
+        command_leaves.update(_derived_safety_leaves(command_leaves))
+        command_leaves.update(actor_diagnostic_leaves)
+        _update_first_hit_steps(
+            first_hit_steps,
+            command_leaves,
+            step,
+            int(args_cli.num_envs),
+        )
+        if required_task_ids is not None:
+            command_leaves[
+                "Diagnostic/required_task_grid_id"
+            ] = required_task_ids
+        if required_task_set_ids is not None:
+            command_leaves[
+                "Diagnostic/required_task_set_id"
+            ] = required_task_set_ids
+        if wheel_pattern_ids is not None:
+            command_leaves["Diagnostic/wheel_pattern_id"] = wheel_pattern_ids
+        if wheel_sign_pattern_ids is not None:
+            command_leaves["Diagnostic/wheel_sign_pattern_id"] = (
+                wheel_sign_pattern_ids
+            )
+        if wheel_amplitude_ids is not None:
+            command_leaves["Diagnostic/wheel_amplitude_id"] = (
+                wheel_amplitude_ids
+            )
+            command_leaves["Diagnostic/wheel_amplitude"] = (
+                wheel_amplitude_values
+            )
+        if wheel_override is not None:
+            for wheel_id in range(4):
+                command_leaves[
+                    "Diagnostic/wheel_action_{}".format(wheel_id)
+                ] = wheel_override[:, wheel_id]
+        if args_cli.compact_metrics:
+            command_leaves = _compact_evaluation_leaves(command_leaves)
+        else:
+            for key, value in command_leaves.items():
+                number = _as_float(value)
+                if number is not None:
+                    series.setdefault(key, []).append(number)
+        if args_cli.per_env_csv is not None:
+            _accumulate_per_env(per_env_accumulator, "reward", rewards, int(args_cli.num_envs))
+            _accumulate_per_env(per_env_accumulator, "done", dones, int(args_cli.num_envs))
+            for key, value in command_leaves.items():
+                _accumulate_per_env(per_env_accumulator, key, value, int(args_cli.num_envs))
+
+        trace_done = bool(dones[args_cli.trace_env].detach().cpu().item())
+        if args_cli.trace_csv is not None and step % int(args_cli.trace_stride) == 0:
+            trace_row = {
+                "scenario": args_cli.scenario,
+                "method": args_cli.method,
+                "task": args_cli.task,
+                "checkpoint": str(resume_path),
+                "ablation": args_cli.ablation,
+                "fixed_skill_id": (
+                    args_cli.fixed_skill_id
+                    if args_cli.ablation == "fixed_skill"
+                    else ""
+                ),
+                "release_target_radius_override": (
+                    args_cli.release_target_radius_override
+                    if args_cli.release_target_radius_override is not None
+                    else ""
+                ),
+                "interaction_phase_prior_gain_override": (
+                    args_cli.interaction_phase_prior_gain_override
+                    if args_cli.interaction_phase_prior_gain_override
+                    is not None
+                    else ""
+                ),
+                "zyb_baseline_checkpoint": (
+                    str(args_cli.zyb_baseline_checkpoint)
+                    if zyb_baseline_active
+                    else ""
+                ),
+                "fixed_base_command": args_cli.fixed_base_command,
+                "required_task_grid": args_cli.required_task_grid,
+                "required_task_sets": args_cli.required_task_sets,
+                "camera_env_index": args_cli.camera_env_index,
+                "compact_metrics": int(args_cli.compact_metrics),
+                "seed": (
+                    int(args_cli.seed)
+                    if args_cli.seed is not None
+                    else int(env_cfg.seed)
+                ),
+                "num_steps": int(args_cli.num_steps),
+                "step_dt_s": step_dt,
+                "env_id": int(args_cli.trace_env),
+                "episode_id": trace_episode_id,
+                "episode_step": trace_episode_step,
+                "global_step": step,
+                "sim_time_s": step * step_dt,
+                "reward": _value_at_env(rewards, args_cli.trace_env),
+                "done": float(trace_done),
+            }
+            for key, value in command_leaves.items():
+                number = _value_at_env(value, args_cli.trace_env)
+                if number is not None:
+                    trace_row[key] = number
+            trace_rows.append(trace_row)
+
+        if trace_done:
+            trace_episode_id += 1
+            trace_episode_step = 0
+        else:
+            trace_episode_step += 1
+
+    row = {
+        "scenario": args_cli.scenario,
+        "method": args_cli.method,
+        "task": args_cli.task,
+        "checkpoint": str(resume_path),
+        "ablation": args_cli.ablation,
+        "fixed_skill_id": (
+            args_cli.fixed_skill_id
+            if args_cli.ablation == "fixed_skill"
+            else ""
+        ),
+        "release_target_radius_override": (
+            args_cli.release_target_radius_override
+            if args_cli.release_target_radius_override is not None
+            else ""
+        ),
+        "interaction_phase_prior_gain_override": (
+            args_cli.interaction_phase_prior_gain_override
+            if args_cli.interaction_phase_prior_gain_override is not None
+            else ""
+        ),
+        "zyb_baseline_checkpoint": (
+            str(args_cli.zyb_baseline_checkpoint)
+            if zyb_baseline_active
+            else ""
+        ),
+        "fixed_base_command": args_cli.fixed_base_command,
+        "required_task_grid": args_cli.required_task_grid,
+        "required_task_sets": args_cli.required_task_sets,
+        "camera_env_index": args_cli.camera_env_index,
+        "compact_metrics": int(args_cli.compact_metrics),
+        "seed": (
+            int(args_cli.seed)
+            if args_cli.seed is not None
+            else int(env_cfg.seed)
+        ),
+        "force_curriculum_level": args_cli.force_curriculum_level,
+        "num_envs": int(args_cli.num_envs),
+        "num_steps": int(args_cli.num_steps),
+        "step_dt_s": step_dt,
+        "elapsed_s": round(time.time() - start, 3),
+    }
+    for key, values in sorted(series.items()):
+        mean, std, last, minimum, maximum = _stats(values)
+        if mean is None:
+            continue
+        row[key + "__mean"] = mean
+        row[key + "__std"] = std
+        row[key + "__last"] = last
+        row[key + "__min"] = minimum
+        row[key + "__max"] = maximum
+    _write_csv(args_cli.out_csv, row)
+    if args_cli.trace_csv is not None:
+        _write_rows_csv(args_cli.trace_csv, trace_rows)
+        print("trace_csv={}".format(args_cli.trace_csv))
+    if args_cli.per_env_csv is not None:
+        metadata = {
+            "scenario": args_cli.scenario,
+            "method": args_cli.method,
+            "task": args_cli.task,
+            "checkpoint": str(resume_path),
+            "ablation": args_cli.ablation,
+            "fixed_skill_id": (
+                args_cli.fixed_skill_id
+                if args_cli.ablation == "fixed_skill"
+                else ""
+            ),
+            "release_target_radius_override": (
+                args_cli.release_target_radius_override
+                if args_cli.release_target_radius_override is not None
+                else ""
+            ),
+            "interaction_phase_prior_gain_override": (
+                args_cli.interaction_phase_prior_gain_override
+                if args_cli.interaction_phase_prior_gain_override is not None
+                else ""
+            ),
+            "zyb_baseline_checkpoint": (
+                str(args_cli.zyb_baseline_checkpoint)
+                if zyb_baseline_active
+                else ""
+            ),
+            "fixed_base_command": args_cli.fixed_base_command,
+            "required_task_grid": args_cli.required_task_grid,
+            "required_task_sets": args_cli.required_task_sets,
+            "camera_env_index": args_cli.camera_env_index,
+            "compact_metrics": int(args_cli.compact_metrics),
+            "seed": (
+                int(args_cli.seed)
+                if args_cli.seed is not None
+                else int(env_cfg.seed)
+            ),
+            "num_steps": int(args_cli.num_steps),
+            "step_dt_s": step_dt,
+            "force_curriculum_level": args_cli.force_curriculum_level,
+        }
+        event_times = {}
+        for event_name, hit_steps in sorted(first_hit_steps.items()):
+            hit_seconds = hit_steps.detach().float().cpu() * step_dt
+            hit_seconds[hit_steps.detach().cpu() < 0] = float("nan")
+            event_times[
+                "EventTime/{}_s".format(event_name)
+            ] = hit_seconds
+        _write_per_env_csv(
+            args_cli.per_env_csv,
+            per_env_accumulator,
+            metadata,
+            int(args_cli.num_envs),
+            per_env_fields=event_times,
+        )
+        print("per_env_csv={}".format(args_cli.per_env_csv))
+    print("evaluation_csv={}".format(args_cli.out_csv))
+    env.close()
+
+
+if __name__ == "__main__":
+    main()
+    simulation_app.close()

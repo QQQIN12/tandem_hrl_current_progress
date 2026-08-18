@@ -1,0 +1,18 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.headless.kit
+======Missing terms====== 
+['tracking_lin_vel', 'tracking_lin_vel_max', 'tracking_ang_vel', 'tracking_lin_vel_x_exp', 'tracking_ang_vel_yaw_exp', 'torques', 'stand_still', 'walking_dof', 'alive', 'lin_vel_z', 'roll', 'ang_vel_xy', 'dof_acc', 'collision', 'dof_pos_limits', 'hip_pos', 'feet_jerk', 'feet_drag', 'feet_contact_forces', 'base_height', 'flat_orientation_l2', 'air_time_variance', 'tracking_lin_vel_x_l1', 'tracking_contacts_shaped_force', 'tracking_contacts_shaped_vel', 'feet_air_time', 'delta_torques', 'work', 'energy_square', 'dof_default_pos', 'dof_error', 'orientation', 'orientation_walking', 'orientation_standing', 'torques_walking', 'torques_standing', 'energy_square_walking', 'energy_square_standing', 'base_height_walking', 'base_height_standing', 'penalty_lin_vel_y', 'hip_action_l2', 'leg_energy_abs_sum', 'leg_energy_sum_abs', 'leg_action_l2', 'leg_energy', 'tracking_ee_sphere', 'tracking_ee_world', 'tracking_ee_sphere_walking', 'tracking_ee_sphere_standing', 'tracking_ee_cart', 'tracking_ee_orn', 'tracking_ee_orn_ry', 'arm_energy_abs_sum', 'wheel_idle_speed', 'wheel_action_l2', 'wheel_action_rate', 'teacher_ensemble_match', 'wheel_forward_use', 'wheel_turn_support', 'term_bad_contact', 'term_tilt', 'term_low_height']
+ =======================
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-18_05-02-37.log[0m
+[36m======================================================================================[0m
+
+[33m05:02:37 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 271828
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 833.3333333333334
+	Environment step-size : 0.03333333333333333
+[33m05:02:37 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m

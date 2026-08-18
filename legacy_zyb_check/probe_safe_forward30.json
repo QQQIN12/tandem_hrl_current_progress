@@ -1,0 +1,16 @@
+{
+  "checkpoint": "/root/gpufree-data/tandem_hrl_620d798/logs/rsl_rl/maniploco/2026-08-17_20-58-03/model_1122.pt",
+  "steps": 30,
+  "analytic_wheels": false,
+  "commands": {
+    "forward": {
+      "mean_body_vx_mps": -0.01737300120294094,
+      "mean_body_wz_radps": 0.046460215002298355,
+      "min_height_m": 0.34833964705467224,
+      "max_tilt_rad": 0.4083114564418793,
+      "bad_contact": false,
+      "low_height": false,
+      "tilt": false
+    }
+  }
+}

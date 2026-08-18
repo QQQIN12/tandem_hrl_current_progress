@@ -1,0 +1,851 @@
+Loading user config located at: '/isaac-sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /isaac-sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260818_113824.log
+[0.064s] [ext: omni.kit.async_engine-0.0.3] startup
+[0.558s] [ext: omni.metrics.core-0.0.3] startup
+[0.558s] [ext: omni.client.lib-1.1.0] startup
+[0.575s] [ext: omni.blobkey-1.1.2] startup
+[0.576s] [ext: omni.stats-1.0.1] startup
+[0.577s] [ext: omni.datastore-0.0.0] startup
+[0.583s] [ext: omni.client-1.3.0] startup
+[0.587s] [ext: omni.ujitso.default-1.0.0] startup
+[0.589s] [ext: omni.hsscclient-1.1.2] startup
+[0.601s] [ext: omni.gpu_foundation.shadercache.vulkan-1.0.0] startup
+[0.610s] [ext: omni.assets.plugins-0.0.0] startup
+[0.612s] [ext: omni.gpu_foundation-0.0.0] startup
+[0.622s] [ext: carb.windowing.plugins-1.0.0] startup
+[0.641s] [ext: omni.kit.renderer.init-0.0.0] startup
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.126.09    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA L40                       | Yes: 0 |     | 46068   MB | 10de      | 0          |
+|     |                                  |        |     |            | 26b5      | c3c5dcf0.. |
+|     |                                  |        |     |            | 37        |            |
+|=============================================================================================|
+| OS: 24.04.3 LTS (Noble Numbat) ubuntu, Version: 24.04.3, Kernel: 5.15.0-168-generic
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+| Bare Metal Cores: 64 | Bare Metal Logical Cores: 128
+| Core Usage Quota: 14
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 122880 | Free Memory: 118934
+| Total Page/Swap (MB): 0 | Free Page/Swap: 0
+|---------------------------------------------------------------------------------------------|
+2026-08-18T03:38:25Z [1,431ms] [Warning] [gpu.foundation.plugin] ECC is enabled on physical device 0
+[1.736s] [ext: omni.kit.pipapi-0.0.0] startup
+[1.738s] [ext: omni.kit.pip_archive-0.0.0] startup
+[1.738s] [ext: omni.pip.compute-1.6.3] startup
+[1.739s] [ext: omni.pip.cloud-1.4.3] startup
+[1.744s] [ext: omni.isaac.core_archive-3.0.0] startup
+[1.744s] [ext: omni.materialx.libs-1.0.7] startup
+[1.753s] [ext: omni.kit.loop-isaac-1.3.7] startup
+[1.754s] [ext: omni.kit.test-2.0.1] startup
+[1.821s] [ext: omni.kit.telemetry-0.5.2] startup
+[1.849s] [ext: omni.isaac.ml_archive-3.0.4] startup
+[1.850s] [ext: omni.usd.config-1.0.6] startup
+[1.856s] [ext: omni.gpucompute.plugins-0.0.0] startup
+[1.856s] [ext: omni.usd.libs-1.0.1] startup
+[1.951s] [ext: omni.mdl-56.0.3] startup
+[2.091s] [ext: omni.iray.libs-0.0.0] startup
+[2.097s] [ext: omni.mdl.neuraylib-0.2.12] startup
+[2.100s] [ext: omni.kit.usd.mdl-1.1.5] startup
+[2.219s] [ext: omni.appwindow-1.1.10] startup
+[2.222s] [ext: omni.kit.renderer.core-1.1.0] startup
+[2.298s] [ext: omni.kit.renderer.capture-0.0.0] startup
+[2.301s] [ext: omni.kit.renderer.imgui-2.0.5] startup
+[2.376s] [ext: omni.ui-2.27.1] startup
+[2.388s] [ext: omni.kit.mainwindow-1.0.3] startup
+[2.390s] [ext: carb.audio-0.1.0] startup
+[2.414s] [ext: omni.uiaudio-1.0.0] startup
+[2.416s] [ext: omni.kit.uiapp-0.0.0] startup
+[2.416s] [ext: omni.usd.schema.metrics.assembler-107.3.1] startup
+[2.419s] [ext: omni.usd.schema.anim-0.0.0] startup
+[2.441s] [ext: omni.usd.schema.physx-107.3.26] startup
+[2.481s] [ext: omni.usd.schema.geospatial-0.0.0] startup
+[2.484s] [ext: omni.usd.schema.omniscripting-1.0.0] startup
+[2.489s] [ext: omni.usd.schema.audio-0.0.0] startup
+[2.493s] [ext: omni.usd.schema.semantics-0.0.0] startup
+[2.495s] [ext: omni.usd_resolver-1.0.0] startup
+[2.499s] [ext: usdrt.scenegraph-7.6.1] startup
+[2.544s] [ext: omni.kit.actions.core-1.0.0] startup
+[2.547s] [ext: omni.timeline-1.0.14] startup
+[2.549s] [ext: omni.usd.core-1.5.3] startup
+[2.552s] [ext: omni.resourcemonitor-107.0.1] startup
+[2.554s] [ext: omni.activity.core-1.0.3] startup
+[2.555s] [ext: omni.kit.audiodeviceenum-1.0.2] startup
+[2.557s] [ext: omni.hydra.usdrt_delegate-7.5.1] startup
+[2.564s] [ext: omni.graph.exec-0.9.6] startup
+[2.564s] [ext: omni.kit.window.popup_dialog-2.0.24] startup
+[2.569s] [ext: omni.kit.exec.core-0.13.4] startup
+[2.573s] [ext: omni.kit.widget.nucleus_connector-2.0.1] startup
+[2.575s] [ext: omni.kit.usd_undo-0.1.8] startup
+[2.576s] [ext: omni.kit.commands-1.4.10] startup
+[2.579s] [ext: omni.hydra.scene_delegate-0.3.4] startup
+[2.584s] [ext: omni.usd-1.13.10] startup
+[2.636s] [ext: omni.kit.asset_converter-5.0.17] startup
+[2.650s] [ext: omni.usd.schema.omni_lens_distortion-0.0.0] startup
+[2.651s] [ext: omni.usd.schema.omni_sensors-0.0.0] startup
+[2.652s] [ext: omni.usd.schema.render_settings.rtx-0.0.0] startup
+[2.653s] [ext: omni.usd.schema.omnigraph-1.0.0] startup
+[2.659s] [ext: isaacsim.robot.schema-3.6.0] startup
+[2.668s] [ext: omni.kit.property.adapter.core-1.0.2] startup
+[2.671s] [ext: omni.kit.menu.core-1.1.2] startup
+[2.672s] [ext: omni.kit.property.adapter.fabric-1.0.3] startup
+[2.673s] [ext: omni.kit.usd.layers-2.2.11] startup
+[2.683s] [ext: omni.kit.clipboard-1.0.5] startup
+[2.683s] [ext: omni.kit.widget.context_menu-1.2.5] startup
+[2.685s] [ext: omni.kit.hotkeys.core-1.3.10] startup
+[2.689s] [ext: omni.kit.widget.path_field-2.0.11] startup
+[2.690s] [ext: omni.kit.context_menu-1.8.6] startup
+[2.692s] [ext: omni.index.libs-380600.8087.0] startup
+[2.692s] [ext: omni.kit.widget.browser_bar-2.0.10] startup
+[2.693s] [ext: omni.kit.widget.options_menu-1.1.6] startup
+[2.697s] [ext: omni.kit.helper.file_utils-0.1.9] startup
+[2.699s] [ext: omni.index-1.0.1] startup
+[2.699s] [ext: omni.hydra.rtx.shadercache.vulkan-1.0.0] startup
+[2.701s] [ext: omni.kit.widget.options_button-1.0.3] startup
+[2.702s] [ext: omni.kit.widget.filebrowser-2.12.3] startup
+[2.707s] [ext: omni.volume-0.5.2] startup
+[2.710s] [ext: omni.ujitso.client-0.0.0] startup
+[2.710s] [ext: omni.kit.notification_manager-1.0.10] startup
+[2.712s] [ext: omni.hydra.rtx-1.0.0] startup
+2026-08-18T03:38:27Z [2,708ms] [Warning] [omni.log] Source: omni.hydra was already registered.
+[2.748s] [ext: omni.ui.scene-1.11.5] startup
+[2.753s] [ext: omni.kit.widget.searchable_combobox-1.0.6] startup
+[2.755s] [ext: omni.kit.window.filepicker-2.13.4] startup
+[2.772s] [ext: omni.kit.widget.searchfield-1.1.8] startup
+[2.774s] [ext: omni.kit.widget.settings-1.2.6] startup
+[2.777s] [ext: omni.kit.menu.utils-2.0.5] startup
+[2.782s] [ext: omni.kit.window.file_exporter-1.0.33] startup
+[2.785s] [ext: omni.kit.widget.filter-1.1.4] startup
+[2.785s] [ext: omni.hydra.engine.stats-1.0.3] startup
+[2.788s] [ext: omni.kit.window.preferences-1.8.0] startup
+[2.792s] [ext: omni.kit.widget.stage-3.1.4] startup
+[2.805s] [ext: omni.kit.window.file_importer-1.1.18] startup
+[2.806s] [ext: omni.kit.raycast.query-1.1.0] startup
+[2.812s] [ext: omni.kit.viewport.registry-104.0.6] startup
+[2.812s] [ext: omni.kit.viewport.legacy_gizmos-1.0.19] startup
+[2.815s] [ext: omni.kit.material.library-2.0.7] startup
+[2.823s] [ext: omni.kit.property.adapter.usd-1.0.2] startup
+[2.825s] [ext: omni.kit.viewport.scene_camera_model-1.0.6] startup
+[2.830s] [ext: omni.kit.hydra_texture-1.4.6] startup
+[2.833s] [ext: omni.kit.window.drop_support-1.0.5] startup
+[2.834s] [ext: omni.kit.widget.viewport-107.1.3] startup
+[2.838s] [ext: omni.kit.primitive.mesh-1.0.17] startup
+[2.842s] [ext: omni.kit.viewport.window-107.2.0] startup
+[2.861s] [ext: omni.kit.manipulator.transform-107.0.0] startup
+[2.866s] [ext: omni.kit.stage_template.core-1.1.22] startup
+[2.867s] [ext: omni.kit.widget.toolbar-2.0.1] startup
+[2.875s] [ext: omni.kit.viewport.utility-1.1.2] startup
+[2.876s] [ext: omni.kit.window.content_browser_registry-0.0.6] startup
+[2.876s] [ext: omni.kit.widget.highlight_label-1.0.3] startup
+[2.877s] [ext: omni.kit.window.file-2.0.5] startup
+[2.881s] [ext: omni.kit.manipulator.tool.snap-1.5.13] startup
+[2.886s] [ext: omni.kit.manipulator.selector-1.1.3] startup
+[2.887s] [ext: omni.kit.window.property-1.12.1] startup
+[2.891s] [ext: omni.kit.window.content_browser-3.1.3] startup
+[2.905s] [ext: omni.kit.viewport.manipulator.transform-107.0.4] startup
+[2.907s] [ext: omni.kit.manipulator.viewport-107.0.1] startup
+[2.908s] [ext: omni.kit.property.usd-4.5.12] startup
+[2.921s] [ext: omni.kit.manipulator.selection-106.0.1] startup
+[2.922s] [ext: omni.fabric.commands-1.1.6] startup
+[2.925s] [ext: omni.kvdb-107.3.26] startup
+[2.927s] [ext: omni.kit.manipulator.prim.core-107.0.8] startup
+[2.935s] [ext: omni.convexdecomposition-107.3.26] startup
+[2.938s] [ext: omni.physx.foundation-107.3.26] startup
+[2.940s] [ext: omni.localcache-107.3.26] startup
+[2.942s] [ext: omni.kit.manipulator.prim.fabric-107.0.4] startup
+[2.943s] [ext: omni.kit.viewport.menubar.core-107.2.1] startup
+[2.960s] [ext: omni.kit.viewport.actions-107.0.2] startup
+[2.965s] [ext: omni.usdphysics-107.3.26] startup
+[2.968s] [ext: omni.kit.widget.prompt-1.0.7] startup
+[2.969s] [ext: omni.kit.manipulator.prim.usd-107.0.3] startup
+[2.970s] [ext: omni.kit.viewport.menubar.display-107.0.3] startup
+[2.972s] [ext: omni.physx.cooking-107.3.26] startup
+[2.976s] [ext: omni.inspect-1.0.2] startup
+[2.977s] [ext: omni.kit.widget.layers-1.8.6] startup
+[2.992s] [ext: omni.kit.manipulator.prim-107.0.0] startup
+[2.992s] [ext: omni.debugdraw-0.1.4] startup
+[2.996s] [ext: omni.physx-107.3.26] startup
+[3.007s] [ext: omni.physics-107.3.26] startup
+[3.011s] [ext: omni.graph.core-2.184.5] startup
+[3.015s] [ext: omni.usdphysics.ui-107.3.26] startup
+[3.048s] [ext: omni.physx.commands-107.3.26] startup
+[3.055s] [ext: omni.physics.stageupdate-107.3.26] startup
+[3.057s] [ext: isaacsim.core.deprecation_manager-0.2.7] startup
+[3.058s] [ext: omni.physx.ui-107.3.26] startup
+[3.098s] [ext: isaacsim.core.version-2.0.6] startup
+[3.099s] [ext: omni.physics.physx-107.3.26] startup
+2026-08-18T03:38:27Z [3,077ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+[3.101s] [ext: isaacsim.storage.native-1.5.1] startup
+[3.103s] [ext: omni.usd.metrics.assembler-107.3.1] startup
+[3.113s] [ext: omni.kit.numpy.common-0.1.3] startup
+[3.114s] [ext: omni.physics.tensors-107.3.26] startup
+[3.121s] [ext: omni.warp.core-1.8.2] startup
+[3.410s] [ext: omni.usd.metrics.assembler.physics-107.3.26] startup
+[3.413s] [ext: omni.isaac.dynamic_control-2.0.7] startup
+2026-08-18T03:38:27Z [3,395ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+[3.419s] [ext: omni.physx.tensors-107.3.26] startup
+[3.425s] [ext: isaacsim.core.utils-3.5.1] startup
+[3.429s] [ext: isaacsim.core.simulation_manager-1.4.4] startup
+[5.441s] [ext: omni.kit.widget.stage_icons-1.0.8] startup
+[5.443s] [ext: omni.kit.stagerecorder.core-107.0.3] startup
+[5.447s] [ext: omni.kit.window.stage-2.6.1] startup
+[5.453s] [ext: omni.kit.menu.create-2.0.1] startup
+[5.455s] [ext: omni.kit.widget.zoombar-1.0.6] startup
+[5.456s] [ext: omni.kit.scripting-107.3.2] startup
+[5.462s] [ext: omni.kit.browser.core-2.3.13] startup
+[5.467s] [ext: isaacsim.replicator.behavior-1.1.16] startup
+[5.467s] [ext: omni.kit.browser.folder.core-1.10.9] startup
+[5.473s] [ext: omni.kit.usd.collect-2.4.5] startup
+[5.477s] [ext: omni.graph.tools-1.79.2] startup
+[5.506s] [ext: omni.kit.usdz_export-1.0.9] startup
+[5.509s] [ext: omni.graph.action_core-1.1.7] startup
+[5.511s] [ext: omni.graph-1.141.2] startup
+[5.568s] [ext: omni.kit.tool.asset_importer-4.3.2] startup
+[5.575s] [ext: omni.graph.action_nodes-1.50.4] startup
+[5.580s] [ext: omni.kit.widget.text_editor-1.1.1] startup
+[5.583s] [ext: omni.ui_query-1.1.8] startup
+[5.585s] [ext: omni.graph.action-1.130.0] startup
+[5.586s] [ext: omni.kit.window.extensions-1.4.27] startup
+[5.602s] [ext: omni.kit.ui_test-1.3.7] startup
+[5.606s] [ext: omni.graph.visualization.nodes-2.1.3] startup
+[5.658s] [ext: omni.kit.tool.collect-2.2.18] startup
+[5.665s] [ext: omni.kit.menu.stage-1.2.7] startup
+[5.668s] [ext: isaacsim.gui.components-1.2.1] startup
+[5.681s] [ext: isaacsim.examples.browser-0.2.1] startup
+[5.688s] [ext: isaacsim.asset.importer.urdf-2.4.31] startup
+[5.769s] [ext: isaacsim.core.cloner-1.4.10] startup
+[5.774s] [ext: omni.kit.stagerecorder.ui-107.0.1] startup
+[5.789s] [ext: isaacsim.asset.browser-1.3.23] startup
+[5.888s] [ext: semantics.schema.editor-2.0.2] startup
+2026-08-18T03:38:30Z [5,870ms] [Warning] [pxr.Semantics] pxr.Semantics is deprecated - please use Semantics instead
+[5.897s] [ext: omni.kit.stagerecorder.bundle-105.0.2] startup
+[5.898s] [ext: omni.kit.window.status_bar-0.1.9] startup
+[5.903s] [ext: omni.kit.widget.graph-2.0.0] startup
+[5.911s] [ext: omni.kit.stage_templates-2.0.0] startup
+[5.916s] [ext: omni.graph.image.core-0.6.1] startup
+[5.917s] [ext: omni.kit.graph.delegate.default-1.2.3] startup
+[5.918s] [ext: isaacsim.core.experimental.utils-0.3.0] startup
+[5.920s] [ext: omni.graph.image.nodes-1.3.1] startup
+[5.921s] [ext: omni.kit.graph.editor.core-1.5.3] startup
+[5.924s] [ext: omni.kit.graph.usd.commands-1.3.1] startup
+[5.926s] [ext: omni.graph.nodes-1.170.10] startup
+[5.939s] [ext: omni.graph.ui_nodes-1.50.5] startup
+[5.944s] [ext: omni.kit.widget.material_preview-1.0.16] startup
+[5.949s] [ext: omni.syntheticdata-0.6.13] startup
+[5.988s] [ext: omni.videoencoding-0.1.2] startup
+[5.996s] [ext: omni.warp-1.8.2] startup
+[6.017s] [ext: omni.kit.window.material_graph-1.9.1] startup
+[6.049s] [ext: omni.graph.scriptnode-1.50.0] startup
+[6.054s] [ext: isaacsim.core.prims-0.6.1] startup
+[6.153s] [ext: isaacsim.test.docstring-1.1.0] startup
+[6.168s] [ext: omni.replicator.core-1.12.27] startup
+2026-08-18T03:38:30Z [6,321ms] [Warning] [omni.graph.core.plugin] Found duplicate of category 'Replicator' - was 'Annotators', adding 'Fabric Reader'
+2026-08-18T03:38:30Z [6,321ms] [Warning] [omni.graph.core.plugin] Category 'Replicator' not accepted on node type 'omni.replicator.core.FabricReader' in extension 'omni.replicator.core'
+2026-08-18T03:38:30Z [6,322ms] [Warning] [omni.replicator.core.scripts.extension] No material configuration file, adding configuration to material settings directly.
+[6.350s] [ext: isaacsim.core.api-4.8.0] startup
+[6.386s] [ext: isaacsim.core.experimental.prims-0.8.1] startup
+[6.464s] [ext: isaacsim.core.nodes-3.4.3] startup
+[6.481s] [ext: isaacsim.robot.surface_gripper-3.3.1] startup
+[6.495s] [ext: isaacsim.util.debug_draw-3.1.0] startup
+[6.507s] [ext: omni.sensors.nv.common-3.0.0] startup
+[6.528s] [ext: isaacsim.robot.manipulators-3.3.6] startup
+[6.552s] [ext: isaacsim.sensors.physx-2.3.2] startup
+[6.608s] [ext: omni.sensors.nv.materials-2.0.0] startup
+[6.636s] [ext: omni.sensors.net-1.0.0] startup
+[6.643s] [ext: isaacsim.app.about-2.0.11] startup
+[6.657s] [ext: isaacsim.simulation_app-2.12.2] startup
+[6.659s] [ext: omni.sensors.nv.ids-2.0.0] startup
+[6.675s] [ext: omni.sensors.nv.lidar-3.0.0] startup
+[6.697s] [ext: omni.kit.property.audio-1.0.16] startup
+[6.802s] [ext: omni.kit.property.camera-1.0.10] startup
+[6.815s] [ext: omni.kit.property.geometry-2.0.4] startup
+[6.835s] [ext: omni.hydra.scene_api-0.1.2] startup
+[6.882s] [ext: omni.kit.property.light-1.0.12] startup
+[7.029s] [ext: omni.sensors.nv.wpm-3.0.0] startup
+[7.032s] [ext: omni.kit.selection-0.1.6] startup
+[7.066s] [ext: omni.kit.property.material-1.11.9] startup
+[7.300s] [ext: omni.kit.property.transform-1.5.13] startup
+[7.314s] [ext: omni.kit.property.render-1.2.1] startup
+[7.318s] [ext: omni.sensors.nv.radar-3.0.0] startup
+[7.326s] [ext: isaacsim.gui.menu-2.4.4] startup
+[7.343s] [ext: omni.kit.manipulator.camera-106.0.4] startup
+[7.361s] [ext: isaacsim.gui.property-1.1.3] startup
+[7.366s] [ext: omni.kit.property.bundle-1.4.1] startup
+[7.369s] [ext: isaacsim.sensors.rtx-15.8.4] startup
+[7.385s] [ext: isaacsim.sensors.physics-0.4.3] startup
+[7.400s] [ext: omni.kit.viewport.menubar.camera-107.0.6] startup
+[7.435s] [ext: omni.kit.viewport.menubar.lighting-107.3.1] startup
+[7.447s] [ext: omni.kit.viewport.menubar.settings-107.0.3] startup
+[7.456s] [ext: omni.kit.viewport.menubar.render-107.0.10] startup
+[7.463s] [ext: isaacsim.robot.policy.examples-4.1.11] startup
+[7.469s] [ext: isaacsim.asset.importer.mjcf-2.5.13] startup
+[7.490s] [ext: omni.kit.window.console-1.1.4] startup
+[7.496s] [ext: omni.rtx.window.settings-0.6.19] startup
+[7.503s] [ext: omni.ocio-0.1.1] startup
+[7.506s] [ext: omni.physx.demos-107.3.26] startup
+[7.533s] [ext: omni.kit.property.physx-107.3.26] startup
+[7.565s] [ext: omni.replicator.replicator_yaml-2.0.11] startup
+[7.588s] [ext: omni.asset_validator.core-1.1.6] startup
+[7.665s] [ext: omni.rtx.settings.core-0.6.5] startup
+[7.670s] [ext: omni.physx.vehicle-107.3.26] startup
+[7.694s] [ext: omni.usd.metrics.assembler.ui-107.3.1] startup
+[7.710s] [ext: omni.kit.window.script_editor-2.0.1] startup
+[7.714s] [ext: isaacsim.robot.wheeled_robots-4.0.24] startup
+[7.721s] [ext: omni.physx.asset_validator-107.3.26] startup
+[7.731s] [ext: omni.kit.window.toolbar-2.0.0] startup
+[7.738s] [ext: omni.physx.camera-107.3.26] startup
+[7.757s] [ext: omni.anim.curve.core-1.3.1] startup
+[7.787s] [ext: omni.physx.cct-107.3.26] startup
+[7.806s] [ext: omni.physx.graph-107.3.26] startup
+[7.832s] [ext: omni.physx.supportui-107.3.26] startup
+[7.852s] [ext: omni.physx.telemetry-107.3.26] startup
+[7.856s] [ext: isaaclab-0.54.2] startup
+[8.124s] [ext: isaaclab_contrib-0.0.2] startup
+[8.125s] [ext: isaacsim.core.throttling-2.2.2] startup
+[8.128s] [ext: omni.kit.ui.actions-1.0.5] startup
+[8.131s] [ext: semantics.schema.property-2.0.1] startup
+[8.134s] [ext: omni.physx.bundle-107.3.26] startup
+[8.135s] [ext: isaacsim.sensors.camera-1.3.6] startup
+[8.142s] [ext: isaaclab_assets-0.2.4] startup
+[8.573s] [ext: isaaclab_tasks-0.11.12] startup
+[8.818s] [ext: omni.kit.menu.common-2.0.1] startup
+[8.820s] [ext: isaaclab_rl-0.4.7] startup
+[8.821s] [ext: isaaclab_mimic-1.0.16] startup
+[8.822s] [ext: isaaclab.python-2.3.2] startup
+[8.825s] Simulation App Starting
+2026-08-18T03:38:33Z [9,063ms] [Warning] [carb.audio.device] audio device is misconfigured or broken {deviceIndex = 0, name = 'default'} (The device is likely misconfigured, check your $HOME/.asoundrc)
+2026-08-18T03:38:33Z [9,063ms] [Warning] [carb.audio.output] failed to retrieve the capabilities for device 0 {result = eDeviceLost (2)}
+2026-08-18T03:38:33Z [9,063ms] [Warning] [carb.audio.context] failed to set the requested output during context creation.  Using a null streamer instead {result = eDeviceLost (2)}
+2026-08-18T03:38:33Z [9,099ms] [Warning] [omni.fabric.plugin] Warning: attribute viewportHandle not found for bucket id 9
+
+[9.288s] app ready
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: /workspace/isaaclab/apps/isaaclab.python.kit
+[INFO]: Parsing configuration from: quadruped_arm.tasks.manager_based.maniploco.physical_safe_lower_env_cfg:PhysicalSafeWheel5TeacherLearningLowerEnvCfg
+======Missing terms====== 
+[]
+ =======================
+[INFO]: Parsing configuration from: quadruped_arm.tasks.manager_based.maniploco.agents.rsl_rl_ppo_cfg:ManiPLocoPPORunnerCfg
+[INFO] Logging experiment in directory: /root/gpufree-data/tandem_hrl_620d798/logs/rsl_rl/maniploco
+Exact experiment name requested from command line: 2026-08-18_11-38-41
+
+[36m======================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: /tmp/isaaclab/logs/isaaclab_2026-08-18_11-38-41.log[0m
+[36m======================================================================================[0m
+
+[33m11:38:41 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 151
+	Physics step-size     : 0.008333333333333333
+	Rendering step-size   : 0.03333333333333333
+	Environment step-size : 0.03333333333333333
+[33m11:38:41 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+[INFO]: Time taken for scene creation : 2.137215 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 32
+	Environment spacing   : 4.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 3.536079 seconds
+[33m11:38:47 [velocity_command.py] WARNING: The velocity command has the 'ranges.heading' attribute set to '(-3.141592653589793, 3.141592653589793)' but the heading command is not active. Consider setting the flag for the heading command to True.[0m
+[INFO] Command Manager:  <CommandManager> contains 2 active terms.
++---------------------------------------------+
+|             Active Command Terms            |
++-------+------------+------------------------+
+| Index | Name       |          Type          |
++-------+------------+------------------------+
+|   0   | locomotion | UniformVelocityCommand |
+|   1   | ee_goal    | EeSphericalGoalCommand |
++-------+------------+------------------------+
+
+[INFO] Event Manager:  <EventManager> contains 1 active terms.
++------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++-----------+------------------------+
+|   Index   | Name                   |
++-----------+------------------------+
+|     0     | reset_root             |
+|     1     | reset_joints           |
+|     2     | init_priv              |
+|     3     | reset_rewards          |
++-----------+------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 3 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 16)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | leg_pos     |          12 |
+|   1    | wheel_vel   |           4 |
+|   2    | arm_ik      |           0 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++--------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (876,)) |
++----------------+-------------+-------------------+
+|     Index      | Name        |       Shape       |
++----------------+-------------+-------------------+
+|       0        | obs         |       (876,)      |
++----------------+-------------+-------------------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 4 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | bad_contact |  False   |
+|   2   | tilt        |  False   |
+|   3   | low_height  |  False   |
++-------+-------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 43 active terms.
++---------------------------------------------------------+
+|                   Active Reward Terms                   |
++-------+--------------------------+----------------------+
+| Index | Name                     |               Weight |
++-------+--------------------------+----------------------+
+|   0   | term_bad_contact         |              -3000.0 |
+|   1   | term_tilt                |              -3000.0 |
+|   2   | term_low_height          |              -3000.0 |
+|   3   | leg_action_l2            |               -0.003 |
+|   4   | tracking_lin_vel         |                  0.6 |
+|   5   | tracking_lin_vel_x_exp   |                  1.5 |
+|   6   | tracking_ang_vel_yaw_l1  |                  0.0 |
+|   7   | tracking_ang_vel_yaw_exp |                  1.5 |
+|   8   | tracking_lin_vel_y_l2    |                  0.0 |
+|   9   | tracking_lin_vel_z_l2    |                  0.0 |
+|   10  | survive                  |                  0.0 |
+|   11  | foot_contacts_z          |                  0.0 |
+|   12  | torques                  |             -7.5e-06 |
+|   13  | tracking_lin_vel_y       |                  0.0 |
+|   14  | lin_vel_z                | -0.44999999999999996 |
+|   15  | ang_vel_xy               |                -0.06 |
+|   16  | tracking_ang_vel         |                  0.3 |
+|   17  | work                     |              -0.0009 |
+|   18  | dof_acc                  |            -2.25e-07 |
+|   19  | action_rate              |              -0.0045 |
+|   20  | dof_pos_limits           |                 -3.0 |
+|   21  | delta_torques            |               -3e-08 |
+|   22  | collision                |                 -3.0 |
+|   23  | walking_dof              |                 0.03 |
+|   24  | hip_pos                  |                -0.06 |
+|   25  | feet_jerk                |               -6e-05 |
+|   26  | alive                    |                  0.3 |
+|   27  | feet_drag                |               -0.024 |
+|   28  | feet_contact_forces      |              -0.0003 |
+|   29  | roll                     |                 -0.3 |
+|   30  | base_height              |                 -0.6 |
+|   31  | tracking_lin_vel_max     |  0.44999999999999996 |
+|   32  | flat_orientation_l2      |                 -0.6 |
+|   33  | air_time_variance        |                 -0.3 |
+|   34  | feet_height              |                  0.0 |
+|   35  | feet_air_time            |                0.015 |
+|   36  | update_last_buffers      |                  0.0 |
+|   37  | wheel_idle_speed         |              -0.0009 |
+|   38  | wheel_action_l2          |              -0.0003 |
+|   39  | wheel_action_rate        |              -0.0006 |
+|   40  | teacher_ensemble_match   |                 0.25 |
+|   41  | wheel_forward_use        |                 0.18 |
+|   42  | wheel_turn_support       |                0.135 |
++-------+--------------------------+----------------------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+Creating window for environment.
+[INFO]: Completed setting up the environment...
+[INFO] Multi-teacher lower-body mode enabled: ZYB stability + conservative transient + neutral recovery.
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=876, out_features=256, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=256, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=16, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=876, out_features=256, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=256, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=1, bias=True)
+)
+[INFO] Partial policy initialization from: /root/gpufree-data/tandem_hrl_620d798/logs/rsl_rl/maniploco/2026-08-18_09-08-24_wheel_only_signfix_gain8_damp6_teacher_model100/model_25.pt
+[INFO] Exact tensors copied: 17
+[INFO] Overlap tensors copied: []
+[INFO] Action exploration std fixed to: 0.050000
+[INFO] Leg action exploration std set to: 0.050000
+[INFO] Wheel action exploration std fixed to: 0.020000
+################################################################################
+                        [1m Learning iteration 0/5 [0m                        
+
+                       Computation: 139 steps/s (collection: 5.375s, learning 0.138s)
+             Mean action noise std: 0.04
+          Mean value_function loss: 4.2836
+               Mean surrogate loss: 0.1419
+                 Mean entropy loss: -28.8939
+                       Mean reward: -0.55
+               Mean episode length: 8.33
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: 0.0000
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0009
+   Episode_Reward/tracking_lin_vel: 0.0159
+Episode_Reward/tracking_lin_vel_x_exp: 0.0257
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.0258
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0023
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0016
+         Episode_Reward/ang_vel_xy: -0.0002
+   Episode_Reward/tracking_ang_vel: 0.0081
+               Episode_Reward/work: -0.0042
+            Episode_Reward/dof_acc: -0.0000
+        Episode_Reward/action_rate: -0.0002
+     Episode_Reward/dof_pos_limits: 0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -0.1475
+        Episode_Reward/walking_dof: 0.0000
+            Episode_Reward/hip_pos: -0.0000
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.0091
+          Episode_Reward/feet_drag: -0.0002
+Episode_Reward/feet_contact_forces: -0.0063
+               Episode_Reward/roll: -0.0002
+        Episode_Reward/base_height: -0.0012
+Episode_Reward/tracking_lin_vel_max: 0.0123
+Episode_Reward/flat_orientation_l2: -0.0000
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: 0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.0001
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+Episode_Reward/teacher_ensemble_match: 0.0036
+  Episode_Reward/wheel_forward_use: 0.0000
+ Episode_Reward/wheel_turn_support: 0.0012
+   Metrics/locomotion/error_vel_xy: 0.0069
+  Metrics/locomotion/error_vel_yaw: 0.0061
+      Episode_Termination/time_out: 0.0651
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0000
+    Episode_Termination/low_height: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 768
+                    Iteration time: 5.51s
+                      Time elapsed: 00:00:05
+                               ETA: 00:00:27
+
+Could not find git repository in /workspace/isaaclab/_isaac_sim/kit/python/lib/python3.11/site-packages/rsl_rl/__init__.py. Skipping.
+Could not find git repository in /root/gpufree-data/tandem_hrl_620d798/scripts/rsl_rl/train.py. Skipping.
+################################################################################
+                        [1m Learning iteration 1/5 [0m                        
+
+                       Computation: 195 steps/s (collection: 3.850s, learning 0.075s)
+             Mean action noise std: 0.04
+          Mean value_function loss: 0.1999
+               Mean surrogate loss: 0.1594
+                 Mean entropy loss: -28.8939
+                       Mean reward: -2.05
+               Mean episode length: 27.12
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: 0.0000
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0046
+   Episode_Reward/tracking_lin_vel: 0.0611
+Episode_Reward/tracking_lin_vel_x_exp: 0.1181
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.1225
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0092
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0018
+         Episode_Reward/ang_vel_xy: -0.0003
+   Episode_Reward/tracking_ang_vel: 0.0315
+               Episode_Reward/work: -0.0063
+            Episode_Reward/dof_acc: -0.0001
+        Episode_Reward/action_rate: -0.0009
+     Episode_Reward/dof_pos_limits: 0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -0.6212
+        Episode_Reward/walking_dof: 0.0003
+            Episode_Reward/hip_pos: -0.0001
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.0326
+          Episode_Reward/feet_drag: -0.0011
+Episode_Reward/feet_contact_forces: -0.0217
+               Episode_Reward/roll: -0.0010
+        Episode_Reward/base_height: -0.0038
+Episode_Reward/tracking_lin_vel_max: 0.0423
+Episode_Reward/flat_orientation_l2: -0.0001
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: -0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.0005
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+Episode_Reward/teacher_ensemble_match: 0.0103
+  Episode_Reward/wheel_forward_use: 0.0018
+ Episode_Reward/wheel_turn_support: 0.0055
+   Metrics/locomotion/error_vel_xy: 0.0168
+  Metrics/locomotion/error_vel_yaw: 0.0114
+      Episode_Termination/time_out: 0.1628
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0000
+    Episode_Termination/low_height: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 1536
+                    Iteration time: 3.92s
+                      Time elapsed: 00:00:09
+                               ETA: 00:00:18
+
+################################################################################
+                        [1m Learning iteration 2/5 [0m                        
+
+                       Computation: 204 steps/s (collection: 3.671s, learning 0.077s)
+             Mean action noise std: 0.04
+          Mean value_function loss: 0.2222
+               Mean surrogate loss: 0.0642
+                 Mean entropy loss: -28.8939
+                       Mean reward: -2.40
+               Mean episode length: 31.33
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: 0.0000
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0091
+   Episode_Reward/tracking_lin_vel: 0.0941
+Episode_Reward/tracking_lin_vel_x_exp: 0.1750
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.2016
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0149
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0017
+         Episode_Reward/ang_vel_xy: -0.0002
+   Episode_Reward/tracking_ang_vel: 0.0492
+               Episode_Reward/work: -0.0070
+            Episode_Reward/dof_acc: -0.0001
+        Episode_Reward/action_rate: -0.0018
+     Episode_Reward/dof_pos_limits: 0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -0.9733
+        Episode_Reward/walking_dof: 0.0000
+            Episode_Reward/hip_pos: -0.0001
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.0503
+          Episode_Reward/feet_drag: -0.0018
+Episode_Reward/feet_contact_forces: -0.0332
+               Episode_Reward/roll: -0.0019
+        Episode_Reward/base_height: -0.0060
+Episode_Reward/tracking_lin_vel_max: 0.0684
+Episode_Reward/flat_orientation_l2: -0.0002
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: 0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.0009
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+Episode_Reward/teacher_ensemble_match: 0.0127
+  Episode_Reward/wheel_forward_use: 0.0000
+ Episode_Reward/wheel_turn_support: 0.0081
+   Metrics/locomotion/error_vel_xy: 0.0265
+  Metrics/locomotion/error_vel_yaw: 0.0136
+      Episode_Termination/time_out: 0.2604
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0000
+    Episode_Termination/low_height: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 2304
+                    Iteration time: 3.75s
+                      Time elapsed: 00:00:13
+                               ETA: 00:00:13
+
+################################################################################
+                        [1m Learning iteration 3/5 [0m                        
+
+                       Computation: 203 steps/s (collection: 3.686s, learning 0.087s)
+             Mean action noise std: 0.04
+          Mean value_function loss: 0.3160
+               Mean surrogate loss: 0.0440
+                 Mean entropy loss: -28.8939
+                       Mean reward: -3.55
+               Mean episode length: 46.69
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: 0.0000
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0086
+   Episode_Reward/tracking_lin_vel: 0.1515
+Episode_Reward/tracking_lin_vel_x_exp: 0.2964
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.3407
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0204
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0016
+         Episode_Reward/ang_vel_xy: -0.0003
+   Episode_Reward/tracking_ang_vel: 0.0783
+               Episode_Reward/work: -0.0071
+            Episode_Reward/dof_acc: -0.0001
+        Episode_Reward/action_rate: -0.0015
+     Episode_Reward/dof_pos_limits: 0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -1.5562
+        Episode_Reward/walking_dof: 0.0012
+            Episode_Reward/hip_pos: -0.0002
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.0794
+          Episode_Reward/feet_drag: -0.0023
+Episode_Reward/feet_contact_forces: -0.0522
+               Episode_Reward/roll: -0.0021
+        Episode_Reward/base_height: -0.0101
+Episode_Reward/tracking_lin_vel_max: 0.1076
+Episode_Reward/flat_orientation_l2: -0.0002
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: -0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.0006
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+Episode_Reward/teacher_ensemble_match: 0.0266
+  Episode_Reward/wheel_forward_use: 0.0073
+ Episode_Reward/wheel_turn_support: 0.0030
+   Metrics/locomotion/error_vel_xy: 0.0322
+  Metrics/locomotion/error_vel_yaw: 0.0149
+      Episode_Termination/time_out: 0.3633
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0000
+    Episode_Termination/low_height: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 3072
+                    Iteration time: 3.77s
+                      Time elapsed: 00:00:16
+                               ETA: 00:00:08
+
+################################################################################
+                        [1m Learning iteration 4/5 [0m                        
+
+                       Computation: 205 steps/s (collection: 3.662s, learning 0.077s)
+             Mean action noise std: 0.04
+          Mean value_function loss: 0.2692
+               Mean surrogate loss: 0.0294
+                 Mean entropy loss: -28.8939
+                       Mean reward: -4.37
+               Mean episode length: 57.75
+   Episode_Reward/term_bad_contact: 0.0000
+          Episode_Reward/term_tilt: 0.0000
+    Episode_Reward/term_low_height: 0.0000
+      Episode_Reward/leg_action_l2: -0.0092
+   Episode_Reward/tracking_lin_vel: 0.1999
+Episode_Reward/tracking_lin_vel_x_exp: 0.3879
+Episode_Reward/tracking_ang_vel_yaw_l1: 0.0000
+Episode_Reward/tracking_ang_vel_yaw_exp: 0.4213
+Episode_Reward/tracking_lin_vel_y_l2: 0.0000
+Episode_Reward/tracking_lin_vel_z_l2: 0.0000
+            Episode_Reward/survive: 0.0000
+    Episode_Reward/foot_contacts_z: 0.0000
+            Episode_Reward/torques: -0.0283
+ Episode_Reward/tracking_lin_vel_y: 0.0000
+          Episode_Reward/lin_vel_z: -0.0018
+         Episode_Reward/ang_vel_xy: -0.0003
+   Episode_Reward/tracking_ang_vel: 0.1027
+               Episode_Reward/work: -0.0085
+            Episode_Reward/dof_acc: -0.0001
+        Episode_Reward/action_rate: -0.0017
+     Episode_Reward/dof_pos_limits: 0.0000
+      Episode_Reward/delta_torques: -0.0000
+          Episode_Reward/collision: -2.0592
+        Episode_Reward/walking_dof: 0.0000
+            Episode_Reward/hip_pos: -0.0004
+          Episode_Reward/feet_jerk: 0.0000
+              Episode_Reward/alive: 0.1045
+          Episode_Reward/feet_drag: -0.0041
+Episode_Reward/feet_contact_forces: -0.0679
+               Episode_Reward/roll: -0.0021
+        Episode_Reward/base_height: -0.0121
+Episode_Reward/tracking_lin_vel_max: 0.1398
+Episode_Reward/flat_orientation_l2: -0.0002
+  Episode_Reward/air_time_variance: -0.0000
+        Episode_Reward/feet_height: 0.0000
+      Episode_Reward/feet_air_time: 0.0000
+Episode_Reward/update_last_buffers: 0.0000
+   Episode_Reward/wheel_idle_speed: -0.0019
+    Episode_Reward/wheel_action_l2: -0.0000
+  Episode_Reward/wheel_action_rate: 0.0000
+Episode_Reward/teacher_ensemble_match: 0.0396
+  Episode_Reward/wheel_forward_use: 0.0000
+ Episode_Reward/wheel_turn_support: 0.0160
+   Metrics/locomotion/error_vel_xy: 0.0419
+  Metrics/locomotion/error_vel_yaw: 0.0265
+      Episode_Termination/time_out: 0.4661
+   Episode_Termination/bad_contact: 0.0000
+          Episode_Termination/tilt: 0.0000
+    Episode_Termination/low_height: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 3840
+                    Iteration time: 3.74s
+                      Time elapsed: 00:00:20
+                               ETA: 00:00:04
+
+Training time: 21.37 seconds
+[12.524s] Simulation App Startup Complete
+[16.861s] [ext: omni.physx.fabric-107.3.26] startup
+2026-08-18T03:38:44Z [20,082ms] [Warning] [omni.fabric.plugin] getAttributeCount called on non-existent path /World/envs/env_9/Robot/link8/visuals/link8
+2026-08-18T03:38:44Z [20,082ms] [Warning] [omni.fabric.plugin] getTypes called on non-existent path /World/envs/env_9/Robot/link8/visuals/link8
+2026-08-18T03:38:48Z [23,590ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-08-18T03:38:48Z [23,590ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.
+2026-08-18T03:38:48Z [23,590ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_goal.
+2026-08-18T03:38:48Z [23,590ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_current.
+2026-08-18T03:38:48Z [23,590ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_goal_center.
+2026-08-18T03:38:49Z [25,379ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_current.
+2026-08-18T03:38:49Z [25,379ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/ee_goal.
+2026-08-18T03:38:49Z [25,379ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.
+2026-08-18T03:38:49Z [25,379ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal.
+2026-08-18T03:39:05Z [41,406ms] [Warning] [carb] Client gpu.foundation.plugin has acquired [gpu::unstable::IMemoryBudgetManagerFactory v0.1] 100 times. Consider accessing this interface with carb::getCachedInterface() (Performance warning)
+[47.229s] Simulation App Shutting Down

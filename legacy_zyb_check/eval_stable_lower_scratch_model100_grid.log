@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/root/gpufree-data/legacy_zyb_check/evaluate_checkpoint_stability_test.py", line 20, in <module>
+    import cli_args  # isort: skip
+    ^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cli_args'
+
+========================================================================
+WARNING: Omniverse/Isaac Sim import statements must take place after the
+`SimulationApp` class has been instantiated. It is a requirement of the
+Carbonite framework's extension/runtime plugin system.
+========================================================================
+
+Ensure that the `SimulationApp` class is instantiated before importing
+any other Omniverse/Isaac Sim modules, as shown below:
+
+    ------------------------------------------------------------------
+    from isaacsim import SimulationApp
+
+    # instantiate the SimulationApp helper class
+    simulation_app = SimulationApp({"headless": False})
+
+    # execute other Omniverse/Isaac Sim imports after instantiating it
+    from isaacsim...
+    ------------------------------------------------------------------
+
+========================================================================
+
+There was an error running python

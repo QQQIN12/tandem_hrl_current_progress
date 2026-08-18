@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.365560359954834,
+      "mean_yaw_error_radps": 0.06488420406977335,
+      "mean_body_vx_mps": -0.011412064830462138,
+      "mean_body_wz_radps": 0.0012059489637613295
+    },
+    "reverse": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.25788322448730466,
+      "mean_yaw_error_radps": 0.044991922775904344,
+      "mean_body_vx_mps": -0.006865197693308195,
+      "mean_body_wz_radps": -0.0021766395370165508
+    },
+    "yaw_left": {
+      "episodes": 4,
+      "stable_rate": 0.75,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.0808619260111599,
+      "mean_yaw_error_radps": 0.4657011762578437,
+      "mean_body_vx_mps": 0.007051458515174002,
+      "mean_body_wz_radps": 0.007818873778302619
+    },
+    "yaw_right": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.05309969902038574,
+      "mean_yaw_error_radps": 0.4478844706217448,
+      "mean_body_vx_mps": -0.014728720784187316,
+      "mean_body_wz_radps": -0.005092705811063449
+    },
+    "forward_arc": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2741686820983887,
+      "mean_yaw_error_radps": 0.35548131306966146,
+      "mean_body_vx_mps": -0.012128626704216003,
+      "mean_body_wz_radps": 0.0032880314408491058
+    },
+    "stationary": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.06217380921045939,
+      "mean_yaw_error_radps": 0.08257650057474772,
+      "mean_body_vx_mps": -0.014484508832295736,
+      "mean_body_wz_radps": 0.0024522631863753003
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "gate": "20-D SupportWBC direct executor probe",
+  "counts_as_final_hrl_evaluation": false,
+  "magnitude": 60.0,
+  "settle_steps": 30,
+  "motion_steps": 60,
+  "ramp_steps": 20,
+  "patterns": [
+    {
+      "pattern": "forward",
+      "wheel_FL_FR_RL_RR": [
+        1.0,
+        1.0,
+        -1.0,
+        -1.0
+      ],
+      "mean_body_vx_mps": -0.004852976184338331,
+      "mean_body_vy_mps": -0.0010460116900503635,
+      "mean_body_wz_radps": 0.003594921203330159,
+      "world_displacement_xy_m": [
+        -0.012111842632293701,
+        -0.0018048286437988281
+      ],
+      "max_tilt_rad": 0.05214296653866768,
+      "min_base_height_m": 0.44907230138778687,
+      "min_support_count": 4.0,
+      "max_leg_correction_norm_rad": 0.13553816080093384
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+"""Arm inverse-kinematics action used by the original ZYB-v0 task."""
+
+from dataclasses import MISSING
+from collections.abc import Sequence
+from typing import Optional
+
+import torch
+
+from isaaclab.managers import ActionTerm, ActionTermCfg
+from isaaclab.utils import configclass
+
+from .utils import (
+    TCP_POS_OFFSET,
+    TCP_QUAT_OFFSET,
+    _normalize_quat,
+    _quat_apply,
+    _quat_mul,
+    _skew_batch,
+    orientation_error,
+)
+
+
+@configclass
+class ArmIkFromEeGoalActionCfg(ActionTermCfg):
+    class_type: Optional[type] = None
+    asset_name: str = "robot"
+    command_name: str = "ee_goal"
+    ee_body_name: str = MISSING  # type: ignore
+    arm_joint_names: list[str] = MISSING  # type: ignore
+    damping: float = 0.05
+    # Maximum per-environment-step joint target increment.  Zero freezes the
+    # arm at its reset pose, which is used while the lower locomotion policy is
+    # being trained.
+    max_joint_delta: float = 0.02
+    ee_tcp_offset: tuple[float, float, float] = TCP_POS_OFFSET
+    ee_tcp_quat_offset: tuple[
+        float, float, float, float
+    ] = TCP_QUAT_OFFSET
+    orientation_weight: float = 0.2
+
+    def __post_init__(self):
+        if self.class_type is None:
+            self.class_type = ArmIkFromEeGoalAction
+
+
+class ArmIkFromEeGoalAction(ActionTerm):
+    """Apply the ZYB-v0 damped least-squares TCP pose update."""
+
+    cfg: ArmIkFromEeGoalActionCfg
+
+    def __init__(self, cfg: ArmIkFromEeGoalActionCfg, env):
+        super().__init__(cfg, env)
+        self._env = env
+        self._robot = env.scene[cfg.asset_name]
+        self._tcp_offset = torch.tensor(
+            cfg.ee_tcp_offset, device=self.device
+        ).view(1, 3)
+        self._tcp_quat_offset = torch.tensor(
+            cfg.ee_tcp_quat_offset, device=self.device
+        ).view(1, 4)
+
+        arm_ids, _ = self._robot.find_joints(cfg.arm_joint_names)
+        if isinstance(arm_ids, (list, tuple)):
+            arm_ids = torch.tensor(
+                arm_ids, device=env.device, dtype=torch.long
+            )
+        else:
+            arm_ids = arm_ids.to(
+                device=env.device, dtype=torch.long
+            ).flatten()
+        self._arm_joint_ids = arm_ids
+
+        ee_ids, _ = self._robot.find_bodies(cfg.ee_body_name)
+        if isinstance(ee_ids, (list, tuple)):
+            self._ee_body_id = int(ee_ids[0])
+        else:
+            self._ee_body_id = int(ee_ids.flatten()[0].item())
+
+        self._lambda = cfg.damping**2
+        self._I6 = torch.eye(6, device=env.device).unsqueeze(0)
+        self._raw = torch.empty((env.num_envs, 0), device=env.device)
+        self._proc = torch.empty((env.num_envs, 0), device=env.device)
+        self._target = torch.zeros(
+            (env.num_envs, self._arm_joint_ids.numel()), device=env.device
+        )
+        self._initialized = torch.zeros(
+            env.num_envs, dtype=torch.bool, device=env.device
+        )
+
+        jacobians = self._robot.root_physx_view.get_jacobians()
+        if jacobians.shape[1] == len(self._robot.data.body_names) - 1:
+            self._ee_jacobi_body_id = self._ee_body_id - 1
+        else:
+            self._ee_jacobi_body_id = self._ee_body_id
+        self._warned_missing_goal_quat = False
+
+    @property
+    def action_dim(self) -> int:
+        return 0
+
+    @property
+    def raw_actions(self) -> torch.Tensor:
+        return self._raw
+
+    @property
+    def processed_actions(self) -> torch.Tensor:
+        return self._proc
+
+    def process_actions(self, actions: torch.Tensor):
+        return
+
+    def reset(self, env_ids: Sequence[int] | None = None) -> None:
+        if env_ids is None:
+            self._initialized.fill_(False)
+        else:
+            self._initialized[env_ids] = False
+
+    def _get_goal_quat_w(
+        self, term, current_tcp_quat_w: torch.Tensor
+    ) -> torch.Tensor:
+        if hasattr(term, "curr_goal_quat_w"):
+            goal = term.curr_goal_quat_w
+            if goal is not None:
+                return goal
+        if not self._warned_missing_goal_quat:
+            print(
+                "[ArmIkFromEeGoalAction] command has no goal quaternion; "
+                "holding the current TCP orientation."
+            )
+            self._warned_missing_goal_quat = True
+        return current_tcp_quat_w
+
+    def apply_actions(self):
+        if self._arm_joint_ids.numel() == 0:
+            return
+
+        current = self._robot.data.joint_pos[
+            :, self._arm_joint_ids
+        ]
+        new_ids = torch.logical_not(self._initialized).nonzero(
+            as_tuple=False
+        ).flatten()
+        if new_ids.numel() > 0:
+            self._target[new_ids] = current[new_ids]
+            self._initialized[new_ids] = True
+
+        # The lower-body stage intentionally holds the upper body at its reset
+        # target.  Return before querying the Jacobian so this is a true
+        # upper-IK ablation, not merely a zeroed update after solving IK.
+        if self.cfg.max_joint_delta <= 0.0:
+            self._robot.set_joint_position_target(
+                self._target, joint_ids=self._arm_joint_ids
+            )
+            return
+
+        term = self._env.command_manager.get_term(
+            self.cfg.command_name
+        )
+        link6_pos_w = self._robot.data.body_pos_w[
+            :, self._ee_body_id
+        ]
+        link6_quat_w = self._robot.data.body_quat_w[
+            :, self._ee_body_id
+        ]
+
+        tcp_offset_local = self._tcp_offset.expand(
+            self._env.num_envs, -1
+        )
+        tcp_offset_w = _quat_apply(
+            link6_quat_w, tcp_offset_local
+        )
+        curr_tcp_pos_w = link6_pos_w + tcp_offset_w
+        tcp_quat_local = self._tcp_quat_offset.expand(
+            self._env.num_envs, -1
+        )
+        curr_tcp_quat_w = _normalize_quat(
+            _quat_mul(link6_quat_w, tcp_quat_local)
+        )
+
+        goal_tcp_pos_w = term.curr_goal_pos_w
+        goal_tcp_quat_w = self._get_goal_quat_w(
+            term, curr_tcp_quat_w
+        )
+        dpos = goal_tcp_pos_w - curr_tcp_pos_w
+        drot = self.cfg.orientation_weight * orientation_error(
+            goal_tcp_quat_w, curr_tcp_quat_w
+        )
+        dpose = torch.cat((dpos, drot), dim=-1).unsqueeze(-1)
+
+        jacobians = self._robot.root_physx_view.get_jacobians()
+        link6_jacobian = jacobians[
+            :,
+            self._ee_jacobi_body_id,
+            0:6,
+            self._arm_joint_ids,
+        ]
+        linear = link6_jacobian[:, 0:3, :]
+        angular = link6_jacobian[:, 3:6, :]
+        tcp_jacobian = torch.cat(
+            (
+                linear - torch.bmm(
+                    _skew_batch(tcp_offset_w), angular
+                ),
+                angular,
+            ),
+            dim=1,
+        )
+        transpose = tcp_jacobian.transpose(1, 2)
+        system = (
+            tcp_jacobian @ transpose
+            + self._lambda * self._I6
+        )
+        delta = (
+            transpose @ torch.linalg.solve(system, dpose)
+        ).squeeze(-1)
+        delta = delta.clamp(
+            -self.cfg.max_joint_delta, self.cfg.max_joint_delta
+        )
+        self._target += delta
+        self._robot.set_joint_position_target(
+            self._target, joint_ids=self._arm_joint_ids
+        )

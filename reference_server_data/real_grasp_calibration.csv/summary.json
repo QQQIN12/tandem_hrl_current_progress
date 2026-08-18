@@ -1,0 +1,68 @@
+{
+  "gate": "fixed-basin physical grasp calibration",
+  "counts_as_policy_evaluation": false,
+  "explicit_finger_material": true,
+  "finger_static_friction": 0.9,
+  "finger_dynamic_friction": 0.7,
+  "closed_loop_alignment": true,
+  "retention_latch": true,
+  "event_gated_progress": true,
+  "iterative_ingress": true,
+  "resolved_finger_body_ids": [
+    23,
+    24
+  ],
+  "jacobian_finger_body_ids": [
+    23,
+    24
+  ],
+  "is_fixed_base": false,
+  "num_robot_bodies": 25,
+  "jacobian_shape": [
+    1,
+    25,
+    6,
+    30
+  ],
+  "jacobian_joint_offset": 6,
+  "retention_contact_streak": 8,
+  "retention_force_balance": 0.25,
+  "retention_transfer_steps": 100,
+  "retention_force_target_n": 0.24,
+  "retention_grip_step_m": 0.00025,
+  "num_envs": 1,
+  "passed_envs": 1,
+  "pass_rate": 1.0,
+  "first_bilateral_step": [
+    120
+  ],
+  "first_lift_step": [
+    139
+  ],
+  "max_bilateral_streak": [
+    440
+  ],
+  "max_lift_m": [
+    0.07255792617797852
+  ],
+  "final_lift_m": [
+    0.07246112823486328
+  ],
+  "max_object_gripper_slip_m": [
+    0.016812363639473915
+  ],
+  "max_base_tilt_rad": [
+    0.08491094410419464
+  ],
+  "min_support_count": [
+    4.0
+  ],
+  "final_reference_step": [
+    260
+  ],
+  "source_platform_position": [
+    -0.4,
+    0.0,
+    0.7
+  ]
+}

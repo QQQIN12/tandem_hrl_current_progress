@@ -1,0 +1,63 @@
+{
+  "gate": "20-D SupportWBC direct executor probe",
+  "counts_as_final_hrl_evaluation": false,
+  "magnitude": 60.0,
+  "settle_steps": 30,
+  "motion_steps": 60,
+  "ramp_steps": 20,
+  "wheel_damping": 2.0,
+  "patterns": [
+    {
+      "pattern": "ideal_yaw",
+      "wheel_FL_FR_RL_RR": [
+        -1.0,
+        1.0,
+        1.0,
+        -1.0
+      ],
+      "support_FL_FR_RL_RR": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_body_vx_mps": -0.07999120652675629,
+      "mean_body_vy_mps": -0.026620065793395042,
+      "mean_body_wz_radps": -0.16632762551307678,
+      "world_displacement_xy_m": [
+        -0.15801310539245605,
+        -0.022791385650634766
+      ],
+      "max_tilt_rad": 0.3155444860458374,
+      "min_base_height_m": 0.38210824131965637,
+      "min_support_count": 4.0,
+      "max_leg_correction_norm_rad": 0.1385640650987625
+    },
+    {
+      "pattern": "ideal_yaw",
+      "wheel_FL_FR_RL_RR": [
+        -1.0,
+        1.0,
+        1.0,
+        -1.0
+      ],
+      "support_FL_FR_RL_RR": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mean_body_vx_mps": -0.03263954818248749,
+      "mean_body_vy_mps": -0.013868361711502075,
+      "mean_body_wz_radps": -0.09157181531190872,
+      "world_displacement_xy_m": [
+        -0.052220821380615234,
+        -0.021743416786193848
+      ],
+      "max_tilt_rad": 0.3417707085609436,
+      "min_base_height_m": 0.3835436999797821,
+      "min_support_count": 4.0,
+      "max_leg_correction_norm_rad": 0.1385640650987625
+    }
+  ]
+}

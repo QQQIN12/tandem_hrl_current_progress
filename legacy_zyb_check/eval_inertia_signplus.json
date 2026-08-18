@@ -1,0 +1,61 @@
+{
+  "checkpoint": "/root/gpufree-data/zyb_v0_model_1023.pt",
+  "environment": "ZYB-v0 direct 16-action executor",
+  "steps": 300,
+  "commands": {
+    "forward": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.3431840387980143,
+      "mean_yaw_error_radps": 0.06008222659428915,
+      "mean_body_vx_mps": 0.011255220572153727,
+      "mean_body_wz_radps": 0.005459338724613189
+    },
+    "reverse": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.25165114720662435,
+      "mean_yaw_error_radps": 0.04777575572331746,
+      "mean_body_vx_mps": -0.012956805328528085,
+      "mean_body_wz_radps": -0.003543020188808441
+    },
+    "yaw_left": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.07214700222015381,
+      "mean_yaw_error_radps": 0.46149276733398437,
+      "mean_body_vx_mps": 0.0032819936672846477,
+      "mean_body_wz_radps": 0.010133182058731715
+    },
+    "yaw_right": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.05901767094930013,
+      "mean_yaw_error_radps": 0.4508629862467448,
+      "mean_body_vx_mps": -0.009207981526851655,
+      "mean_body_wz_radps": -0.0021308453877766924
+    },
+    "forward_arc": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 0.0,
+      "mean_linear_error_mps": 0.2541298611958822,
+      "mean_yaw_error_radps": 0.3461240959167481,
+      "mean_body_vx_mps": 0.00758363202214241,
+      "mean_body_wz_radps": 0.01064030905564626
+    },
+    "stationary": {
+      "episodes": 4,
+      "stable_rate": 1.0,
+      "tracking_pass_rate": 1.0,
+      "mean_linear_error_mps": 0.07284538666407267,
+      "mean_yaw_error_radps": 0.07716087500254312,
+      "mean_body_vx_mps": -6.40236337979634e-05,
+      "mean_body_wz_radps": 0.0065212543805440275
+    }
+  }
+}

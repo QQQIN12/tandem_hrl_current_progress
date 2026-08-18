@@ -11,6 +11,9 @@
 - `/root/gpufree-data` 下的历史训练/评估目录和小型输出文件。
 - `tandem_620d798_gitarchive.tar` 的分片。单个分片小于 GitHub 普通文件限制，恢复方法见下文。
 
+完整 `server_snapshot/` 目录作为 GitHub Release 资产
+`server_snapshot_20260818.tar` 上传；主分支保留可直接 clone 的代码和核心参考资产。
+
 ## 不包含
 
 - `/workspace/isaaclab`、Isaac Sim 安装、系统缓存和用户 home 下的缓存；这些不是项目源代码，复现者需要自行准备 Isaac Sim 5.1 / Isaac Lab 2.3.2。
